@@ -36,6 +36,16 @@
         #btn-limpiar { background-color: #ffc107; color: black; }
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
+        
+        /* ***** CAMBIO AQUÍ: Centrar texto en columnas específicas ***** */
+        /* Seleccionamos las columnas 2, 3, 5 y 6 y centramos el texto de sus textareas */
+        td:nth-child(2) textarea,
+        td:nth-child(3) textarea,
+        td:nth-child(5) textarea,
+        td:nth-child(6) textarea {
+            text-align: center;
+        }
+
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -183,7 +193,6 @@
                 fechaInput.value = solicitudACargar.fecha;
                 tablaCuerpo.innerHTML = '';
                 solicitudACargar.items.forEach(item => agregarFila(item));
-                // Asegura que el DOM se actualice antes de ajustar la altura
                 setTimeout(() => {
                     tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
                 }, 0);
@@ -204,6 +213,21 @@
             ajustarAlturaTextarea(e.target);
         }
     });
+
+    // ***** CAMBIO AQUÍ: Formatear decimales en la columna Cantidad *****
+    // Usamos el evento 'blur' que se dispara cuando el usuario sale del campo de texto.
+    tablaCuerpo.addEventListener('blur', (e) => {
+        // Nos aseguramos de que el evento venga de un textarea y que esté en la segunda columna (Cantidad)
+        if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
+            const textarea = e.target;
+            const valor = parseFloat(textarea.value); // Convertimos el texto a número
+
+            // Si es un número válido, lo formateamos a dos decimales
+            if (!isNaN(valor)) {
+                textarea.value = valor.toFixed(2);
+            }
+        }
+    }, true); // El 'true' al final es importante para que el evento se capture correctamente
 
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
