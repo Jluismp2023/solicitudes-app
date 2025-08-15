@@ -29,28 +29,19 @@
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
-        
-        .actions { 
-            margin-bottom: 20px; 
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         .history-actions { margin-bottom: 20px; }
-        
         button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #btn-agregar { background-color: #28a745; }
         #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
-        
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
-
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
@@ -66,7 +57,6 @@
     </style>
 </head>
 <body>
-
     <div class="app-container">
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
@@ -102,12 +92,9 @@
             <ul id="lista-solicitudes"></ul>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
-    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
       authDomain: "solicitud-mat.firebaseapp.com",
@@ -116,8 +103,6 @@
       messagingSenderId: "562521909209",
       appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
     };
-
-    // Inicializa Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -159,7 +144,6 @@
         fechaInput.value = fechaFormateada;
     }
 
-    // ***** LA CORRECCIÓN ESTÁ AQUÍ *****
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
@@ -213,9 +197,10 @@
             .catch(error => console.error("Error al eliminar: ", error));
     }
     
+    // ***** LA CORRECCIÓN ESTÁ AQUÍ *****
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
-            ajustarAlturaTextarea(e.targget);
+            ajustarAlturaTextarea(e.target); // Corregido de 'e.targget' a 'e.target'
         }
     });
 
