@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitud de Materiales</title>
     <style>
-        /* Los estilos CSS no cambian */
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
         .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .tabs { display: flex; background-color: #004a99; }
@@ -30,18 +29,27 @@
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
-        .actions, .history-actions { margin-bottom: 20px; }
-        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin-right: 10px; }
-        #btn-agregar { background-color: #28a745; color: white; }
-        #btn-guardar { background-color: #007bff; color: white; }
+        
+        /* ***** CAMBIO AQUÍ: Estilos para alinear los botones ***** */
+        .actions { 
+            margin-bottom: 20px; 
+            display: flex; /* Activa Flexbox */
+            flex-wrap: wrap; /* Permite que los botones pasen a la siguiente línea si no caben */
+            gap: 10px; /* Espacio entre botones */
+        }
+        .history-actions { margin-bottom: 20px; }
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
+        #btn-agregar { background-color: #28a745; }
+        #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
-        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; color: white; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
+        
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .btn-cargar { background-color: #17a2b8; color: white; margin: 5px; }
-        .btn-eliminar { background-color: #dc3545; color: white; margin: 5px; }
+        .btn-cargar { background-color: #17a2b8; margin: 5px; }
+        .btn-eliminar { background-color: #dc3545; margin: 5px; }
 
         @media print {
             body { margin: 20px; background-color: #fff; }
@@ -75,9 +83,11 @@
                 <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
                 <tbody></tbody>
             </table>
-            <div class="actions">
-                <button id="btn-agregar">➕ Agregar Fila</button><button id="btn-guardar">💾 Guardar Solicitud</button>
-                <button id="btn-limpiar">📄 Limpiar Formulario</button><button id="btn-imprimir">🖨️ Imprimir</button>
+             <div class="actions">
+                <button id="btn-agregar">➕ Agregar Fila</button>
+                <button id="btn-guardar">💾 Guardar Solicitud</button>
+                <button id="btn-limpiar">📄 Limpiar Formulario</button>
+                <button id="btn-imprimir">🖨️ Imprimir</button>
             </div>
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
@@ -97,7 +107,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    // Configuración de Firebase (debes tener tus propias llaves aquí)
+    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
       authDomain: "solicitud-mat.firebaseapp.com",
@@ -123,11 +133,9 @@
     const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
     const listaSolicitudesUI = document.getElementById('lista-solicitudes');
     
-    // ***** CAMBIO AQUÍ: Nueva función para ajustar la altura *****
-    // Esta función ajusta la altura de un área de texto específica.
     function ajustarAlturaTextarea(textarea) {
-        textarea.style.height = 'auto'; // Resetea la altura
-        textarea.style.height = `${textarea.scrollHeight}px`; // Ajusta a la altura del contenido
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
     }
     
     function limpiarFormulario() {
@@ -183,7 +191,6 @@
         });
     }
 
-    // ***** CAMBIO AQUÍ: Función `cargarSolicitud` actualizada *****
     function cargarSolicitud(id) {
         db.collection("solicitudes").doc(id).get().then((doc) => {
             if (doc.exists) {
@@ -192,12 +199,7 @@
                 fechaInput.value = solicitudACargar.fecha;
                 tablaCuerpo.innerHTML = '';
                 solicitudACargar.items.forEach(item => agregarFila(item));
-                
-                // Después de agregar todas las filas, ajustamos la altura de cada textarea
-                tablaCuerpo.querySelectorAll('textarea').forEach(textarea => {
-                    ajustarAlturaTextarea(textarea);
-                });
-
+                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
                 openTab('solicitud');
             } else {
                 alert("No se encontró la solicitud.");
@@ -210,14 +212,12 @@
             .catch(error => console.error("Error al eliminar: ", error));
     }
     
-    // Este listener ajusta la altura MIENTRAS ESCRIBES
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
             ajustarAlturaTextarea(e.target);
         }
     });
 
-    // El resto de los event listeners no cambian
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
