@@ -3,731 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Bodega - Consorcio Gallardo</title>
-    
+    <title>Solicitud de Materiales</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; }
-        .app-header { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header-title { font-size: 1.5em; font-weight: bold; }
-        .header-logo img { height: 50px; width: auto; }
-        .container { max-width: 1200px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1, h2, h3 { text-align: center; color: #444; }
-        .page-title-container { display: flex; justify-content: space-between; align-items: center; }
-        .form-container, .table-container, .filter-container { margin-bottom: 30px; }
-        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ddd; box-sizing: border-box; background-color: #fff; }
-        input:disabled, select:disabled, textarea:disabled { background-color: #e9ecef; cursor: not-allowed; }
-        
-        /* --- ESTA ES LA MODIFICACIÓN --- */
-        textarea {
-            min-height: 90px; /* Altura mínima más grande */
-            resize: vertical;   /* Permite al usuario cambiar el tamaño verticalmente */
+        /* Los estilos CSS no cambian */
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
+        .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .tabs { display: flex; background-color: #004a99; }
+        .tab-button { padding: 15px 20px; cursor: pointer; border: none; background-color: #004a99; color: white; font-size: 16px; transition: background-color 0.3s; }
+        .tab-button:hover { background-color: #005cbf; }
+        .tab-button.active { background-color: #fff; color: #004a99; font-weight: bold; }
+        .tab-content { display: none; padding: 20px; border: 2px solid #004a99; border-top: none; }
+        .tab-content.active { display: block; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px; }
+        .header-logo img { width: 200px; height: auto; margin-right: 15px; }
+        .header-title { text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99; }
+        .solicitud-box { border: 1px solid black; padding: 5px; }
+        .solicitud-box label { display: block; font-weight: bold; }
+        .solicitud-box input { border: none; width: 150px; text-align: center; }
+        .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        td.item-column { font-weight: bold; padding-top: 12px; }
+        .date-section { margin-bottom: 100px; }
+        #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
+        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
+        .signature-block { width: 250px; }
+        .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
+        .actions, .history-actions { margin-bottom: 20px; }
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin-right: 10px; }
+        #btn-agregar { background-color: #28a745; color: white; }
+        #btn-guardar { background-color: #007bff; color: white; }
+        #btn-limpiar { background-color: #ffc107; color: black; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; color: white; }
+        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
+        #historial h2 { text-align: center; color: #004a99; }
+        #lista-solicitudes { list-style: none; padding: 0; }
+        #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .btn-cargar { background-color: #17a2b8; color: white; margin: 5px; }
+        .btn-eliminar { background-color: #dc3545; color: white; margin: 5px; }
+
+        @media print {
+            body { margin: 20px; background-color: #fff; }
+            .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
+            .tabs, .actions, .history-actions { display: none; }
+            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
+            body:not(.printing-historial) #historial { display: none; }
+            body:not(.printing-historial) #solicitud { display: block; }
+            body.printing-historial #solicitud { display: none; }
+            body.printing-historial #historial { display: block; }
+            body.printing-historial #lista-solicitudes .btn-cargar,
+            body.printing-historial #lista-solicitudes .btn-eliminar { display: none; }
         }
-        
-        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 5px; }
-        button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        tbody tr:nth-child(even) { background-color: #f2f2f2; }
-        nav { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
-        nav button { width: auto; background: none; border: none; padding: 15px; font-size: 14px; color: #007bff; cursor: pointer; border-bottom: 2px solid transparent; }
-        nav button.active { color: #333; font-weight: bold; border-bottom: 2px solid #007bff; }
-        .hidden { display: none; }
-        .action-btn { padding: 5px 10px; margin-right: 5px; border-radius: 4px; border: none; color: white; cursor: pointer; }
-        .edit-btn { background-color: #ffc107; }
-        .delete-btn { background-color: #dc3545; }
-        .print-btn { background-color: #28a745; width: auto; padding: 8px 15px; font-size: 14px; }
-        .stock-detail { background-color: #e9ecef; }
-        .stock-detail td { padding-left: 30px; }
-        #planilla-total { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <div class="header-title">CONSORCIO GENERAL GALLARDO PASAJE</div>
-        <div class="header-logo"><img src="logo.jpg" alt="Logo del Consorcio"></div>
-    </header>
 
-    <div class="container">
-        <nav>
-            <button id="btn-rubros" class="active">Rubros de Obra</button>
-            <button id="btn-planilla">Planillas</button>
-            <button id="btn-pagos">Mano de Obra</button>
-            <button id="btn-stock">Stock Actual</button>
-            <button id="btn-historial-compras">Compras</button>
-            <button id="btn-historial-consumos">Consumos</button>
-            <button id="btn-materiales">Catálogo Materiales</button>
-            <button id="btn-proveedores">Proveedores</button>
-        </nav>
-
-        <main id="page-rubros">
-            <div class="page-title-container">
-                <h2>&#127959; Rubros de Obra</h2>
-                <button class="print-btn" id="btn-print-rubros">Imprimir Rubros</button>
+    <div class="app-container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
+            <button class="tab-button" onclick="openTab('historial')">Historial</button>
+        </div>
+        <div id="solicitud" class="tab-content active">
+            <div class="header">
+                <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
+                <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+                <div class="solicitud-box"><label for="no_solicitud">No. SOLICITUD</label><input type="text" id="no_solicitud"></div>
             </div>
-            <div class="form-container">
-                <h3>Crear Nuevo Rubro</h3>
-                <form id="rubro-form">
-                    <input type="text" id="rubro-numero" placeholder="# de Rubro (ej: 1.1, A-02)" required>
-                    <input type="text" id="rubro-nombre" placeholder="Nombre del Rubro (ej: Mampostería)" required>
-                    <input type="text" id="rubro-unidad" placeholder="Unidad (ej: m2, m3, und, global)" required>
-                    <button type="submit">Crear Rubro</button>
-                </form>
+            <h3 class="materials-title">MATERIALES</h3>
+            <table id="tabla-materiales">
+                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="actions">
+                <button id="btn-agregar">➕ Agregar Fila</button><button id="btn-guardar">💾 Guardar Solicitud</button>
+                <button id="btn-limpiar">📄 Limpiar Formulario</button><button id="btn-imprimir">🖨️ Imprimir</button>
             </div>
-            <div class="table-container">
-                <table id="rubros-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nombre</th>
-                            <th>Unidad</th>
-                            <th>Costo Materiales</th>
-                            <th>Costo Mano Obra</th>
-                            <th>Costo Total</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rubros-table-body"></tbody>
-                </table>
+            <div class="date-section"><input type="text" id="fecha-input"></div>
+            <div class="signatures">
+                <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
+                <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
-        </main>
-        
-        <main id="page-planilla" class="hidden">
-            <div class="page-title-container">
-                <h2>&#128203; Registro de Planillas</h2>
-                <button class="print-btn" id="btn-print-planilla">Imprimir Planilla</button>
-            </div>
-            <div class="form-container">
-                <h3>Ingresar Nueva Planilla</h3>
-                <form id="planilla-form">
-                    <label for="planilla-fecha">Fecha de Planilla:</label>
-                    <input type="date" id="planilla-fecha" required>
-                    <label for="planilla-rubro">Rubro:</label>
-                    <select id="planilla-rubro" required></select>
-                    <input type="number" id="planilla-cantidad" placeholder="Cantidad Ejecutada" step="any" min="0" required>
-                    <input type="number" id="planilla-valor" placeholder="Valor Total de Planilla" step="0.01" min="0" required>
-                    <textarea id="planilla-observaciones" placeholder="Observaciones (opcional)"></textarea>
-                    <button type="submit">Guardar Planilla</button>
-                </form>
-            </div>
-            <div class="table-container" id="planilla-table-container">
-                <h3>Historial de Planillas</h3>
-                <table id="planilla-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th># Rubro</th>
-                            <th>Nombre del Rubro</th>
-                            <th>Unidad</th>
-                            <th>Cantidad</th>
-                            <th>Precio Unitario</th>
-                            <th>Precio Total</th>
-                            <th>Observaciones</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div id="planilla-total"></div>
-            </div>
-        </main>
-
-        <main id="page-pagos" class="hidden">
-            <div class="page-title-container">
-                <h2>&#128181; Mano de Obra</h2>
-                <button class="print-btn" id="btn-print-pagos">Imprimir Historial</button>
-            </div>
-            <div class="form-container">
-                <h3 id="pago-form-titulo">Registrar Mano de Obra</h3>
-                <form id="pago-form">
-                    <input type="hidden" id="pago-id-original">
-                    <label for="pago-fecha">Fecha:</label>
-                    <input type="date" id="pago-fecha" required>
-                    <label for="pago-rubro">Asignar a Rubro:</label>
-                    <select id="pago-rubro" required></select>
-                    <label for="pago-proveedor">Proveedor / Contratista:</label>
-                    <select id="pago-proveedor" required></select>
-                    <input type="number" id="pago-monto" placeholder="Costo Mano de Obra" step="0.01" min="0" required>
-                    <textarea id="pago-descripcion" placeholder="Descripción del trabajo (opcional)"></textarea>
-                    <button type="submit" id="pago-submit-btn">Registrar Mano de Obra</button>
-                    <button type="button" id="pago-cancel-btn" class="hidden" style="background-color: #6c757d;">Cancelar Edición</button>
-                </form>
-            </div>
-            <div class="table-container">
-                <h3>Historial de Mano de Obra</h3>
-                <table id="pagos-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Rubro</th>
-                            <th>Proveedor</th>
-                            <th>Costo</th>
-                            <th>Descripción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-
-        <main id="page-stock" class="hidden">
-            <div class="page-title-container">
-                <h2>&#128211; Stock Actual Detallado</h2>
-                <button class="print-btn" id="btn-print-stock">Imprimir Stock</button>
-            </div>
-            <div class="filter-container">
-                <label for="stock-search">Buscar por Nombre de Material:</label>
-                <input type="text" id="stock-search" placeholder="Escribe para buscar...">
-            </div>
-            <div class="table-container">
-                <table id="stock-table">
-                    <thead><tr><th>Material</th><th>Cantidad Total</th><th>Valor Total del Stock</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-
-        <main id="page-historial-compras" class="hidden">
-             <div class="page-title-container">
-                <h2>&#128220; Historial y Registro de Compras</h2>
-                <button class="print-btn" id="btn-print-compras">Imprimir Historial</button>
-            </div>
-            <div class="form-container">
-                <h3 id="compra-form-titulo">Registrar Nueva Compra</h3>
-                <form id="compra-form">
-                    <input type="hidden" id="compra-id-original">
-                    <label for="compra-fecha">Fecha:</label><input type="date" id="compra-fecha" required>
-                    <select id="compra-nombre" required></select>
-                    <input type="number" id="compra-cantidad" placeholder="Cantidad" required min="1">
-                    <input type="number" id="compra-precio" placeholder="Precio Unitario" step="0.01" required min="0">
-                    <select id="compra-proveedor" required></select>
-                    <button type="submit" id="compra-submit-btn">Registrar</button>
-                    <button type="button" id="compra-cancel-btn" class="hidden" style="background-color: #6c757d;">Cancelar</button>
-                </form>
-            </div>
-            <div class="table-container">
-                <h3>Historial</h3>
-                <table id="historial-compras-table">
-                    <thead><tr><th>Fecha</th><th>Material</th><th>Cantidad</th><th>Costo Unitario</th><th>Proveedor</th><th>Acciones</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-        
-        <main id="page-historial-consumos" class="hidden">
-            <div class="page-title-container">
-                <h2>&#128221; Historial y Registro de Consumos</h2>
-                <button class="print-btn" id="btn-print-consumos">Imprimir Historial</button>
-            </div>
-            <div class="form-container">
-                <h3 id="consumo-form-titulo">Registrar Nuevo Consumo</h3>
-                <form id="consumo-form">
-                    <input type="hidden" id="consumo-id-original">
-                    <label for="consumo-fecha">Fecha:</label><input type="date" id="consumo-fecha" required>
-                    <label for="consumo-rubro">Asignar a Rubro:</label><select id="consumo-rubro" required></select>
-                    <select id="consumo-nombre" required></select>
-                    <input type="number" id="consumo-cantidad" placeholder="Cantidad" required min="1">
-                    <textarea id="consumo-descripcion" placeholder="Descripción del uso" required></textarea>
-                    <button type="submit" id="consumo-submit-btn">Registrar</button>
-                    <button type="button" id="consumo-cancel-btn" class="hidden" style="background-color: #6c757d;">Cancelar</button>
-                </form>
-            </div>
-             <div class="table-container">
-                <h3>Historial</h3>
-                <table id="historial-consumos-table">
-                    <thead><tr><th>Fecha</th><th>Rubro</th><th>Material</th><th>Cantidad</th><th>Descripción</th><th>Acciones</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-
-        <main id="page-materiales" class="hidden">
-             <h2>&#128295; Catálogo de Materiales</h2>
-             <div class="form-container">
-                <h3 id="material-form-titulo">Definir o Modificar Material</h3>
-                <form id="material-form">
-                    <input type="hidden" id="material-nombre-original">
-                    <input type="text" id="material-nombre" placeholder="Nombre" required>
-                    <input type="text" id="material-unidad" placeholder="Unidad de Medida" required>
-                    <button type="submit" id="material-submit-btn">Guardar</button>
-                    <button type="button" id="material-cancel-btn" class="hidden" style="background-color: #6c757d;">Cancelar</button>
-                </form>
-            </div>
-            <div class="table-container">
-                <h3>Lista de Materiales</h3>
-                <table id="materiales-table">
-                    <thead><tr><th>Material</th><th>Unidad</th><th>Acciones</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-
-        <main id="page-proveedores" class="hidden">
-             <h2>&#128100; Gestión de Proveedores</h2>
-             <div class="form-container">
-                <h3 id="proveedor-form-titulo">Crear o Modificar Proveedor</h3>
-                <form id="proveedor-form">
-                    <input type="hidden" id="proveedor-nombre-original">
-                    <input type="text" id="proveedor-nombre" placeholder="Nombre" required>
-                    <input type="tel" id="proveedor-telefono" placeholder="Teléfono">
-                    <input type="email" id="proveedor-email" placeholder="Email">
-                    <input type="text" id="proveedor-direccion" placeholder="Dirección">
-                    <button type="submit" id="proveedor-submit-btn">Guardar</button>
-                    <button type="button" id="proveedor-cancel-btn" class="hidden" style="background-color: #6c757d;">Cancelar</button>
-                </form>
-            </div>
-            <div class="table-container">
-                <h3>Lista de Proveedores</h3>
-                <table id="proveedores-table">
-                    <thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Acciones</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </main>
-
+        </div>
+        <div id="historial" class="tab-content">
+            <h2>Historial de Solicitudes</h2>
+            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial</button></div>
+            <ul id="lista-solicitudes"></ul>
+        </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Databases
-            let stock = JSON.parse(localStorage.getItem('miStock')) || {};
-            let catalogoMateriales = JSON.parse(localStorage.getItem('miCatalogoMateriales')) || {};
-            let proveedores = JSON.parse(localStorage.getItem('misProveedores')) || {};
-            let historialCompras = JSON.parse(localStorage.getItem('miHistorialCompras')) || [];
-            let historialConsumos = JSON.parse(localStorage.getItem('miHistorialConsumos')) || [];
-            let rubros = JSON.parse(localStorage.getItem('misRubros')) || {};
-            let historialPagos = JSON.parse(localStorage.getItem('miHistorialPagos')) || [];
-            let planillas = JSON.parse(localStorage.getItem('misPlanillas')) || [];
-            let stockSearchTerm = '';
+    // Configuración de Firebase (debes tener tus propias llaves aquí)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
+      authDomain: "solicitud-mat.firebaseapp.com",
+      projectId: "solicitud-mat",
+      storageBucket: "solicitud-mat.appspot.com",
+      messagingSenderId: "562521909209",
+      appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
+    };
 
-            // Persistence
-            const guardar = {
-                stock: () => localStorage.setItem('miStock', JSON.stringify(stock)),
-                catalogoMateriales: () => localStorage.setItem('miCatalogoMateriales', JSON.stringify(catalogoMateriales)),
-                proveedores: () => localStorage.setItem('misProveedores', JSON.stringify(proveedores)),
-                historialCompras: () => localStorage.setItem('miHistorialCompras', JSON.stringify(historialCompras)),
-                historialConsumos: () => localStorage.setItem('miHistorialConsumos', JSON.stringify(historialConsumos)),
-                rubros: () => localStorage.setItem('misRubros', JSON.stringify(rubros)),
-                pagos: () => localStorage.setItem('miHistorialPagos', JSON.stringify(historialPagos)),
-                planillas: () => localStorage.setItem('misPlanillas', JSON.stringify(planillas)),
-            };
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            // UI Selections
-            const forms = { compra: document.getElementById('compra-form'), consumo: document.getElementById('consumo-form'), material: document.getElementById('material-form'), proveedor: document.getElementById('proveedor-form'), rubro: document.getElementById('rubro-form'), pago: document.getElementById('pago-form'), planilla: document.getElementById('planilla-form') };
-            const tableBodies = { stock: document.querySelector('#stock-table tbody'), historialCompras: document.querySelector('#historial-compras-table tbody'), historialConsumos: document.querySelector('#historial-consumos-table tbody'), materiales: document.querySelector('#materiales-table tbody'), proveedores: document.querySelector('#proveedores-table tbody'), pagos: document.querySelector('#pagos-table tbody'), rubros: document.getElementById('rubros-table-body'), planilla: document.querySelector('#planilla-table tbody') };
-            const dropdowns = { compraMaterial: document.getElementById('compra-nombre'), compraProveedor: document.getElementById('compra-proveedor'), consumoMaterial: document.getElementById('consumo-nombre'), consumoRubro: document.getElementById('consumo-rubro'), pagoRubro: document.getElementById('pago-rubro'), pagoProveedor: document.getElementById('pago-proveedor'), planillaRubro: document.getElementById('planilla-rubro') };
-            const pages = { rubros: document.getElementById('page-rubros'), planilla: document.getElementById('page-planilla'), pagos: document.getElementById('page-pagos'), stock: document.getElementById('page-stock'), historialCompras: document.getElementById('page-historial-compras'), historialConsumos: document.getElementById('page-historial-consumos'), materiales: document.getElementById('page-materiales'), proveedores: document.getElementById('page-proveedores') };
-            const navButtons = { rubros: document.getElementById('btn-rubros'), planilla: document.getElementById('btn-planilla'), pagos: document.getElementById('btn-pagos'), stock: document.getElementById('btn-stock'), historialCompras: document.getElementById('btn-historial-compras'), historialConsumos: document.getElementById('btn-historial-consumos'), materiales: document.getElementById('btn-materiales'), proveedores: document.getElementById('btn-proveedores') };
-            const stockSearchInput = document.getElementById('stock-search');
+    function openTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    }
 
-            // Print Function
-            function printElement(elementId, title) {
-                const elementToPrint = document.getElementById(elementId);
-                let contentToPrint = elementToPrint.outerHTML;
-                if (elementId === 'planilla-table-container') {
-                    contentToPrint = document.getElementById('planilla-table').outerHTML + document.getElementById('planilla-total').outerHTML;
-                }
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`<html><head><title>${title}</title><style>body{font-family:sans-serif}table{width:100%;border-collapse:collapse}th,td{padding:8px;border:1px solid #ddd;text-align:left}th{background-color:#f2f2f2}h1,h3,p{text-align:center}#planilla-total{margin-top:20px;text-align:right;font-size:1.2em;font-weight:bold;}</style></head><body><h1>${title}</h1><h3>CONSORCIO GENERAL GALLARDO PASAJE</h3><p>Fecha de reporte: ${new Date().toLocaleDateString()}</p>${contentToPrint}</body></html>`);
-                setTimeout(() => { printWindow.document.close(); printWindow.focus(); printWindow.print(); printWindow.close(); }, 250);
-            }
+    const noSolicitudInput = document.getElementById('no_solicitud');
+    const fechaInput = document.getElementById('fecha-input');
+    const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
+    const listaSolicitudesUI = document.getElementById('lista-solicitudes');
+    
+    // ***** CAMBIO AQUÍ: Nueva función para ajustar la altura *****
+    // Esta función ajusta la altura de un área de texto específica.
+    function ajustarAlturaTextarea(textarea) {
+        textarea.style.height = 'auto'; // Resetea la altura
+        textarea.style.height = `${textarea.scrollHeight}px`; // Ajusta a la altura del contenido
+    }
+    
+    function limpiarFormulario() {
+        noSolicitudInput.value = '';
+        establecerFecha();
+        tablaCuerpo.innerHTML = '';
+        for (let i = 0; i < 5; i++) agregarFila();
+    }
 
-            // Render Functions
-            function renderPlanillaTable() {
-                const planillaBody = tableBodies.planilla;
-                planillaBody.innerHTML = '';
-                let granTotal = 0;
-                [...planillas].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(p => {
-                    const rubro = rubros[p.rubroNombre];
-                    if (!rubro) return;
-                    const precioUnitario = p.cantidad > 0 ? p.valor / p.cantidad : 0;
-                    granTotal += p.valor;
-                    const row = planillaBody.insertRow();
-                    row.innerHTML = `<td>${new Date(p.fecha).toLocaleDateString()}</td><td>${rubro.numero}</td><td>${p.rubroNombre}</td><td>${rubro.unidad}</td><td>${p.cantidad}</td><td>$${precioUnitario.toFixed(2)}</td><td>$${p.valor.toFixed(2)}</td><td>${p.observaciones || '-'}</td><td><button class="action-btn delete-btn" data-id="${p.id}" data-type="planilla">Eliminar</button></td>`;
-                });
-                document.getElementById('planilla-total').textContent = `TOTAL PLANILLADO: $${granTotal.toFixed(2)}`;
-            }
-            function renderRubros() {
-                const rubrosBody = tableBodies.rubros;
-                rubrosBody.innerHTML = '';
-                Object.keys(rubros).sort((a, b) => rubros[a].numero.localeCompare(rubros[b].numero)).forEach(nombre => {
-                    const rubro = rubros[nombre];
-                    const costoMateriales = rubro.consumos.reduce((total, idConsumo) => {
-                        const consumo = historialConsumos.find(c => c.id === idConsumo);
-                        return total + (consumo ? consumo.costoTotal : 0);
-                    }, 0);
-                    const costoManoDeObra = historialPagos.filter(p => p.rubroNombre === nombre).reduce((sum, p) => sum + p.monto, 0);
-                    const costoTotal = costoMateriales + costoManoDeObra;
-                    const row = rubrosBody.insertRow();
-                    row.innerHTML = `<td>${rubro.numero}</td><td>${nombre}</td><td>${rubro.unidad}</td><td>$${costoMateriales.toFixed(2)}</td><td>$${costoManoDeObra.toFixed(2)}</td><td>$${costoTotal.toFixed(2)}</td><td><button class="action-btn delete-btn" data-id="${nombre}" data-type="rubro">Eliminar</button></td>`;
-                });
-            }
-            function renderPagosTable() {
-                tableBodies.pagos.innerHTML = '';
-                [...historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(pago => {
-                    const row = tableBodies.pagos.insertRow();
-                    row.innerHTML = `<td>${new Date(pago.fecha).toLocaleDateString()}</td><td>${pago.rubroNombre}</td><td>${pago.proveedorNombre}</td><td>$${pago.monto.toFixed(2)}</td><td>${pago.descripcion || '-'}</td><td><button class="action-btn edit-btn" data-id="${pago.id}" data-type="pago">Editar</button><button class="action-btn delete-btn" data-id="${pago.id}" data-type="pago">Eliminar</button></td>`;
-                });
-            }
-            function renderStockTable() {
-                tableBodies.stock.innerHTML = '';
-                let filteredKeys = Object.keys(catalogoMateriales).filter(key => key.toLowerCase().includes(stockSearchTerm));
-                filteredKeys.sort().forEach(nombre => {
-                    const lotes = stock[nombre] || [];
-                    const cantidadTotal = lotes.reduce((sum, lote) => sum + lote.cantidad, 0);
-                    const valorTotal = lotes.reduce((sum, lote) => sum + (lote.cantidad * lote.precio), 0);
-                    const row = tableBodies.stock.insertRow();
-                    row.innerHTML = `<td><strong>${nombre}</strong></td><td><strong>${cantidadTotal} ${catalogoMateriales[nombre].unidad}</strong></td><td><strong>$${valorTotal.toFixed(2)}</strong></td>`;
-                    if (lotes.length > 0) {
-                        const detailRow = tableBodies.stock.insertRow();
-                        detailRow.className = 'stock-detail';
-                        const cell = detailRow.insertCell();
-                        cell.colSpan = 3;
-                        cell.innerHTML = `<ul>${lotes.map(l => `<li>${l.cantidad} ${catalogoMateriales[nombre].unidad} a $${l.precio.toFixed(2)} c/u (Comprado: ${new Date(l.fecha).toLocaleDateString()})</li>`).join('')}</ul>`;
-                    }
-                });
-            }
-            function renderAllHistoryTables() {
-                tableBodies.historialCompras.innerHTML = '';
-                [...historialCompras].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).forEach(c=>{tableBodies.historialCompras.insertRow().innerHTML=`<td>${new Date(c.fecha).toLocaleDateString()}</td><td>${c.nombre}</td><td>${c.cantidad}</td><td>$${c.precio.toFixed(2)}</td><td>${c.proveedor}</td><td><button class="action-btn edit-btn" data-id="${c.id}" data-type="compra">Editar</button><button class="action-btn delete-btn" data-id="${c.id}" data-type="compra">Eliminar</button></td>`});
-                tableBodies.historialConsumos.innerHTML = '';
-                [...historialConsumos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).forEach(c=>{tableBodies.historialConsumos.insertRow().innerHTML=`<td>${new Date(c.fecha).toLocaleDateString()}</td><td>${c.rubro}</td><td>${c.nombre}</td><td>${c.cantidad}</td><td>${c.descripcion}</td><td><button class="action-btn edit-btn" data-id="${c.id}" data-type="consumo">Editar</button><button class="action-btn delete-btn" data-id="${c.id}" data-type="consumo">Eliminar</button></td>`});
-            }
-            function renderCatalogTables() {
-                tableBodies.materiales.innerHTML = '';
-                Object.keys(catalogoMateriales).sort().forEach(n=>{tableBodies.materiales.insertRow().innerHTML=`<td>${n}</td><td>${catalogoMateriales[n].unidad}</td><td><button class="action-btn edit-btn" data-id="${n}" data-type="material">Editar</button><button class="action-btn delete-btn" data-id="${n}" data-type="material">Eliminar</button></td>`});
-                tableBodies.proveedores.innerHTML = '';
-                Object.keys(proveedores).sort().forEach(n=>{tableBodies.proveedores.insertRow().innerHTML=`<td>${n}</td><td>${proveedores[n].telefono||'-'}</td><td>${proveedores[n].email||'-'}</td><td>${proveedores[n].direccion||'-'}</td><td><button class="action-btn edit-btn" data-id="${n}" data-type="proveedor">Editar</button><button class="action-btn delete-btn" data-id="${n}" data-type="proveedor">Eliminar</button></td>`});
-            }
-            function populateDropdowns() {
-                const materialOptions = Object.keys(catalogoMateriales).sort().map(n=>`<option value="${n}">${n}</option>`).join('');
-                dropdowns.compraMaterial.innerHTML = `<option value="" disabled selected>Material...</option>${materialOptions}`;
-                dropdowns.consumoMaterial.innerHTML = `<option value="" disabled selected>Material...</option>${materialOptions}`;
-                const proveedorOptions = Object.keys(proveedores).sort().map(n=>`<option value="${n}">${n}</option>`).join('');
-                dropdowns.compraProveedor.innerHTML = `<option value="" disabled selected>Proveedor...</option>${proveedorOptions}`;
-                dropdowns.pagoProveedor.innerHTML = `<option value="" disabled selected>Proveedor...</option>${proveedorOptions}`;
-                if(dropdowns.planillaProveedor) dropdowns.planillaProveedor.innerHTML = `<option value="" disabled selected>Proveedor...</option>${proveedorOptions}`;
-                const rubroOptions = Object.keys(rubros).sort().map(n=>`<option value="${n}">(${rubros[n].numero}) ${n}</option>`).join('');
-                dropdowns.consumoRubro.innerHTML = `<option value="" disabled selected>Rubro...</option>${rubroOptions}`;
-                dropdowns.pagoRubro.innerHTML = `<option value="" disabled selected>Rubro...</option>${rubroOptions}`;
-                dropdowns.planillaRubro.innerHTML = `<option value="" disabled selected>Rubro...</option>${rubroOptions}`;
-            }
-            function updateAllUI() {
-                renderRubros();
-                renderPlanillaTable();
-                renderPagosTable();
-                renderStockTable();
-                renderAllHistoryTables();
-                renderCatalogTables();
-                populateDropdowns();
-            }
-            
-            // Navigation
-            function switchPage(targetPage) {
-                Object.values(pages).forEach(p => p.classList.add('hidden'));
-                Object.values(navButtons).forEach(b => b.classList.remove('active'));
-                if (pages[targetPage]) pages[targetPage].classList.remove('hidden');
-                if (navButtons[targetPage]) navButtons[targetPage].classList.add('active');
-            }
-            Object.keys(navButtons).forEach(key => navButtons[key].addEventListener('click', () => switchPage(key)));
-            
-            // Event Listeners
-            stockSearchInput.addEventListener('input', e => { stockSearchTerm = e.target.value.toLowerCase(); renderStockTable(); });
-            document.getElementById('btn-print-rubros').addEventListener('click', () => printElement('rubros-table', 'Reporte de Rubros de Obra'));
-            document.getElementById('btn-print-stock').addEventListener('click', () => printElement('stock-table', 'Reporte de Stock Actual'));
-            document.getElementById('btn-print-compras').addEventListener('click', () => printElement('historial-compras-table', 'Reporte de Historial de Compras'));
-            document.getElementById('btn-print-consumos').addEventListener('click', () => printElement('historial-consumos-table', 'Reporte de Historial de Consumos'));
-            document.getElementById('btn-print-pagos').addEventListener('click', () => printElement('pagos-table', 'Reporte de Mano de Obra'));
-            document.getElementById('btn-print-planilla').addEventListener('click', () => printElement('planilla-table-container', 'Planilla de Cobro'));
-            
-            // Form Submissions
-            function setTodayDate() {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('compra-fecha').value = today;
-                document.getElementById('consumo-fecha').value = today;
-                document.getElementById('pago-fecha').value = today;
-                document.getElementById('planilla-fecha').value = today;
-            }
-            forms.planilla.addEventListener('submit', e => {
-                e.preventDefault();
-                const planilla = { id: Date.now(), fecha: document.getElementById('planilla-fecha').value, rubroNombre: dropdowns.planillaRubro.value, cantidad: parseFloat(document.getElementById('planilla-cantidad').value), valor: parseFloat(document.getElementById('planilla-valor').value), observaciones: document.getElementById('planilla-observaciones').value.trim() };
-                if (!planilla.rubroNombre || isNaN(planilla.valor) || isNaN(planilla.cantidad)) { alert('Por favor, complete todos los campos requeridos con valores válidos.'); return; }
-                planillas.push(planilla);
-                guardar.planillas();
-                updateAllUI();
-                forms.planilla.reset();
-                setTodayDate();
-            });
-            forms.rubro.addEventListener('submit', e => {
-                e.preventDefault();
-                const numero = document.getElementById('rubro-numero').value.trim();
-                const nombre = document.getElementById('rubro-nombre').value.trim();
-                const unidad = document.getElementById('rubro-unidad').value.trim();
-                if (nombre && numero && unidad && !rubros[nombre]) {
-                    rubros[nombre] = { numero, unidad, consumos: [] };
-                    guardar.rubros();
-                    updateAllUI();
-                    forms.rubro.reset();
-                } else {
-                    alert('El rubro ya existe o faltan campos por completar.');
-                }
-            });
-            forms.pago.addEventListener('submit', e => {
-                e.preventDefault();
-                const idOriginal = parseInt(document.getElementById('pago-id-original').value);
-                const pagoData = { fecha: document.getElementById('pago-fecha').value, rubroNombre: dropdowns.pagoRubro.value, proveedorNombre: dropdowns.pagoProveedor.value, monto: parseFloat(document.getElementById('pago-monto').value), descripcion: document.getElementById('pago-descripcion').value.trim() };
-                if (!pagoData.rubroNombre || !pagoData.proveedorNombre || isNaN(pagoData.monto)) { alert("Por favor, complete todos los campos requeridos."); return; }
-                if (idOriginal) {
-                    const index = historialPagos.findIndex(p => p.id === idOriginal);
-                    if (index > -1) { historialPagos[index] = { ...historialPagos[index], ...pagoData }; }
-                } else {
-                    historialPagos.push({ id: Date.now(), ...pagoData });
-                }
-                guardar.pagos();
-                resetearFormularioPago();
-                updateAllUI();
-            });
-            forms.compra.addEventListener('submit', e => {
-                e.preventDefault();
-                const idOriginal = parseInt(document.getElementById('compra-id-original').value);
-                if (idOriginal) {
-                    const index = historialCompras.findIndex(c => c.id === idOriginal);
-                    if (index > -1) {
-                        historialCompras[index].fecha = document.getElementById('compra-fecha').value;
-                        historialCompras[index].proveedor = dropdowns.compraProveedor.value;
-                    }
-                    guardar.historialCompras();
-                } else {
-                    const compra = { id: Date.now(), fecha: document.getElementById('compra-fecha').value, nombre: dropdowns.compraMaterial.value, cantidad: parseInt(document.getElementById('compra-cantidad').value), precio: parseFloat(document.getElementById('compra-precio').value), proveedor: dropdowns.compraProveedor.value };
-                    if (!compra.nombre || !compra.proveedor) { alert("Seleccione material y proveedor."); return; }
-                    if (!stock[compra.nombre]) stock[compra.nombre] = [];
-                    stock[compra.nombre].push({ fecha: compra.fecha, cantidad: compra.cantidad, precio: compra.precio });
-                    stock[compra.nombre].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-                    guardar.stock();
-                    historialCompras.push(compra);
-                    guardar.historialCompras();
-                }
-                resetearFormularioCompra();
-                updateAllUI();
-            });
-            forms.consumo.addEventListener('submit', e => {
-                 e.preventDefault();
-                 const idOriginal = parseInt(document.getElementById('consumo-id-original').value);
-                 if (idOriginal) {
-                    const index = historialConsumos.findIndex(c => c.id === idOriginal);
-                    if (index > -1) {
-                        historialConsumos[index].fecha = document.getElementById('consumo-fecha').value;
-                        historialConsumos[index].descripcion = document.getElementById('consumo-descripcion').value;
-                    }
-                    guardar.historialConsumos();
-                 } else {
-                     const consumo = { id: Date.now(), fecha: document.getElementById('consumo-fecha').value, rubro: dropdowns.consumoRubro.value, nombre: dropdowns.consumoMaterial.value, cantidad: parseInt(document.getElementById('consumo-cantidad').value), descripcion: document.getElementById('consumo-descripcion').value, costoTotal: 0 };
-                     if (!consumo.rubro || !consumo.nombre) { alert("Seleccione rubro y material."); return; }
-                     const lotes = stock[consumo.nombre] || [];
-                     const cantidadTotal = lotes.reduce((sum, lote) => sum + lote.cantidad, 0);
-                     if (cantidadTotal < consumo.cantidad) { alert('Error: No hay suficiente stock.'); return; }
-                     let cantidadARestar = consumo.cantidad;
-                     let costoTotalConsumo = 0;
-                     for (let i = 0; i < lotes.length && cantidadARestar > 0; i++) {
-                         const cantidadTomada = Math.min(lotes[i].cantidad, cantidadARestar);
-                         costoTotalConsumo += cantidadTomada * lotes[i].precio;
-                         lotes[i].cantidad -= cantidadTomada;
-                         cantidadARestar -= cantidadTomada;
-                     }
-                     consumo.costoTotal = costoTotalConsumo;
-                     stock[consumo.nombre] = lotes.filter(lote => lote.cantidad > 0);
-                     guardar.stock();
-                     historialConsumos.push(consumo);
-                     rubros[consumo.rubro].consumos.push(consumo.id);
-                     guardar.historialConsumos();
-                     guardar.rubros();
-                 }
-                 resetearFormularioConsumo();
-                 updateAllUI();
-            });
-            forms.material.addEventListener('submit', e => {
-                e.preventDefault();
-                const nombreOriginal = document.getElementById('material-nombre-original').value;
-                const nombreNuevo = document.getElementById('material-nombre').value.trim();
-                const unidad = document.getElementById('material-unidad').value.trim();
-                if (!nombreNuevo || !unidad) { alert("Complete todos los campos."); return; }
-                if (nombreOriginal && nombreOriginal !== nombreNuevo) {
-                    catalogoMateriales[nombreNuevo] = catalogoMateriales[nombreOriginal];
-                    delete catalogoMateriales[nombreOriginal];
-                    stock[nombreNuevo] = stock[nombreOriginal];
-                    delete stock[nombreOriginal];
-                }
-                catalogoMateriales[nombreNuevo] = { ...catalogoMateriales[nombreNuevo], unidad };
-                guardar.catalogoMateriales();
-                guardar.stock();
-                resetearFormularioMaterial();
-                updateAllUI();
-            });
-            forms.proveedor.addEventListener('submit', e => {
-                e.preventDefault();
-                const nombreOriginal = document.getElementById('proveedor-nombre-original').value;
-                const nombreNuevo = document.getElementById('proveedor-nombre').value.trim();
-                if (!nombreNuevo) { alert("El nombre es obligatorio."); return; }
-                if (nombreOriginal && nombreOriginal !== nombreNuevo) { delete proveedores[nombreOriginal]; }
-                proveedores[nombreNuevo] = { telefono: document.getElementById('proveedor-telefono').value.trim(), email: document.getElementById('proveedor-email').value.trim(), direccion: document.getElementById('proveedor-direccion').value.trim() };
-                guardar.proveedores();
-                resetearFormularioProveedor();
-                updateAllUI();
-            });
-            
-            // Action Buttons & Reset Functions
-            function resetearFormulario(form, tituloEl, btnEl, cancelBtnEl, titulo, btnTexto) {
-                form.reset();
-                if(tituloEl) tituloEl.textContent = titulo;
-                if(btnEl) btnEl.textContent = btnTexto;
-                if(cancelBtnEl) cancelBtnEl.classList.add('hidden');
-                setTodayDate();
-            }
-            function resetearFormularioCompra() {
-                resetearFormulario(forms.compra, document.getElementById('compra-form-titulo'), document.getElementById('compra-submit-btn'), document.getElementById('compra-cancel-btn'), 'Registrar Nueva Compra', 'Registrar Compra');
-                document.getElementById('compra-id-original').value = '';
-                document.getElementById('compra-nombre').disabled = false;
-                document.getElementById('compra-cantidad').disabled = false;
-                document.getElementById('compra-precio').disabled = false;
-                document.getElementById('compra-proveedor').disabled = false;
-            }
-            document.getElementById('compra-cancel-btn').addEventListener('click', resetearFormularioCompra);
-            function resetearFormularioConsumo() {
-                resetearFormulario(forms.consumo, document.getElementById('consumo-form-titulo'), document.getElementById('consumo-submit-btn'), document.getElementById('consumo-cancel-btn'), 'Registrar Nuevo Consumo', 'Registrar Consumo');
-                document.getElementById('consumo-id-original').value = '';
-                dropdowns.consumoMaterial.disabled = false;
-                document.getElementById('consumo-cantidad').disabled = false;
-                dropdowns.consumoRubro.disabled = false;
-            }
-            document.getElementById('consumo-cancel-btn').addEventListener('click', resetearFormularioConsumo);
-            function resetearFormularioMaterial() {
-                resetearFormulario(forms.material, document.getElementById('material-form-titulo'), document.getElementById('material-submit-btn'), document.getElementById('material-cancel-btn'), 'Definir o Modificar Material', 'Guardar Material');
-                document.getElementById('material-nombre-original').value = '';
-            }
-            document.getElementById('material-cancel-btn').addEventListener('click', resetearFormularioMaterial);
-            function resetearFormularioProveedor() {
-                resetearFormulario(forms.proveedor, document.getElementById('proveedor-form-titulo'), document.getElementById('proveedor-submit-btn'), document.getElementById('proveedor-cancel-btn'), 'Crear o Modificar Proveedor', 'Guardar Proveedor');
-                document.getElementById('proveedor-nombre-original').value = '';
-            }
-            document.getElementById('proveedor-cancel-btn').addEventListener('click', resetearFormularioProveedor);
-            function resetearFormularioPago() {
-                resetearFormulario(forms.pago, document.getElementById('pago-form-titulo'), document.getElementById('pago-submit-btn'), document.getElementById('pago-cancel-btn'), 'Registrar Mano de Obra', 'Registrar Mano de Obra');
-                document.getElementById('pago-id-original').value = '';
-            }
-            document.getElementById('pago-cancel-btn').addEventListener('click', resetearFormularioPago);
+    function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
+        const fila = document.createElement('tr');
+        const itemCount = tablaCuerpo.rows.length + 1;
+        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
+        tablaCuerpo.appendChild(fila);
+    }
 
-            function handleTableClickEvents(e) {
-                const target = e.target;
-                if (target.tagName !== 'BUTTON') return;
-                const id = target.dataset.id;
-                const type = target.dataset.type;
-                if (type === 'planilla' && target.classList.contains('delete-btn')) {
-                    if (confirm('¿Está seguro de eliminar esta planilla?')) {
-                        planillas = planillas.filter(p => p.id !== parseInt(id));
-                        guardar.planillas();
-                        updateAllUI();
-                    }
-                } else if (type === 'pago' && target.classList.contains('edit-btn')) {
-                    const pago = historialPagos.find(p => p.id === parseInt(id));
-                    document.getElementById('pago-id-original').value = pago.id;
-                    document.getElementById('pago-fecha').value = pago.fecha;
-                    dropdowns.pagoRubro.value = pago.rubroNombre;
-                    dropdowns.pagoProveedor.value = pago.proveedorNombre;
-                    document.getElementById('pago-monto').value = pago.monto;
-                    document.getElementById('pago-descripcion').value = pago.descripcion;
-                    document.getElementById('pago-form-titulo').textContent = "Modificar Mano de Obra";
-                    document.getElementById('pago-submit-btn').textContent = "Guardar Cambios";
-                    document.getElementById('pago-cancel-btn').classList.remove('hidden');
-                } else if (type === 'pago' && target.classList.contains('delete-btn')) {
-                    if (confirm('¿Está seguro de eliminar este registro?')) {
-                        historialPagos = historialPagos.filter(p => p.id !== parseInt(id));
-                        guardar.pagos(); updateAllUI();
-                    }
-                } else if (type === 'compra' && target.classList.contains('edit-btn')) {
-                    const compra = historialCompras.find(c => c.id === parseInt(id));
-                    document.getElementById('compra-id-original').value = compra.id;
-                    document.getElementById('compra-fecha').value = compra.fecha;
-                    dropdowns.compraMaterial.value = compra.nombre;
-                    document.getElementById('compra-cantidad').value = compra.cantidad;
-                    document.getElementById('compra-precio').value = compra.precio;
-                    dropdowns.compraProveedor.value = compra.proveedor;
-                    document.getElementById('compra-form-titulo').textContent = 'Modificar Compra';
-                    document.getElementById('compra-submit-btn').textContent = 'Guardar Cambios';
-                    document.getElementById('compra-cancel-btn').classList.remove('hidden');
-                    dropdowns.compraMaterial.disabled = true;
-                    document.getElementById('compra-cantidad').disabled = true;
-                    document.getElementById('compra-precio').disabled = true;
-                } else if (type === 'compra' && target.classList.contains('delete-btn')) {
-                    if (confirm('¿Eliminar del historial? NOTA: El stock NO se ajustará.')) {
-                        historialCompras = historialCompras.filter(c => c.id !== parseInt(id));
-                        guardar.historialCompras(); updateAllUI();
-                    }
-                } else if (type === 'consumo' && target.classList.contains('edit-btn')) {
-                    const consumo = historialConsumos.find(c => c.id === parseInt(id));
-                    document.getElementById('consumo-id-original').value = consumo.id;
-                    document.getElementById('consumo-fecha').value = consumo.fecha;
-                    dropdowns.consumoMaterial.value = consumo.nombre;
-                    dropdowns.consumoRubro.value = consumo.rubro;
-                    document.getElementById('consumo-cantidad').value = consumo.cantidad;
-                    document.getElementById('consumo-descripcion').value = consumo.descripcion;
-                    document.getElementById('consumo-form-titulo').textContent = "Modificar Consumo";
-                    document.getElementById('consumo-submit-btn').textContent = "Guardar Cambios";
-                    document.getElementById('consumo-cancel-btn').classList.remove('hidden');
-                    dropdowns.consumoMaterial.disabled = true;
-                    document.getElementById('consumo-cantidad').disabled = true;
-                    dropdowns.consumoRubro.disabled = true;
-                } else if (type === 'consumo' && target.classList.contains('delete-btn')) {
-                    if (confirm('¿Eliminar del historial? NOTA: El stock NO se ajustará.')) {
-                        historialConsumos = historialConsumos.filter(c => c.id !== parseInt(id));
-                        guardar.historialConsumos(); updateAllUI();
-                    }
-                } else if (type === 'material' && target.classList.contains('edit-btn')) {
-                    const material = catalogoMateriales[id];
-                    document.getElementById('material-nombre-original').value = id;
-                    document.getElementById('material-nombre').value = id;
-                    document.getElementById('material-unidad').value = material.unidad;
-                    document.getElementById('material-form-titulo').textContent = "Modificar Material";
-                    document.getElementById('material-submit-btn').textContent = "Guardar Cambios";
-                    document.getElementById('material-cancel-btn').classList.remove('hidden');
-                } else if (type === 'material' && target.classList.contains('delete-btn')) {
-                    if (confirm(`¿Eliminar '${id}' y su stock? Acción irreversible.`)) {
-                        delete catalogoMateriales[id];
-                        delete stock[id];
-                        guardar.catalogoMateriales();
-                        guardar.stock();
-                        updateAllUI();
-                    }
-                } else if (type === 'proveedor' && target.classList.contains('edit-btn')) {
-                    const prov = proveedores[id];
-                    document.getElementById('proveedor-nombre-original').value = id;
-                    document.getElementById('proveedor-nombre').value = id;
-                    document.getElementById('proveedor-telefono').value = prov.telefono;
-                    document.getElementById('proveedor-email').value = prov.email;
-                    document.getElementById('proveedor-direccion').value = prov.direccion;
-                    document.getElementById('proveedor-submit-btn').textContent = "Guardar Cambios";
-                    document.getElementById('proveedor-cancel-btn').classList.remove('hidden');
-                } else if (type === 'proveedor' && target.classList.contains('delete-btn')) {
-                    if (confirm(`¿Eliminar a '${id}'?`)) {
-                        delete proveedores[id];
-                        guardar.proveedores();
-                        updateAllUI();
-                    }
-                } else if (type === 'rubro' && target.classList.contains('delete-btn')) {
-                     if (confirm(`¿Eliminar el rubro '${id}'? No se revertirán los consumos.`)) {
-                        delete rubros[id];
-                        guardar.rubros();
-                        updateAllUI();
-                    }
-                }
-            }
-            document.querySelector('.container').addEventListener('click', handleTableClickEvents);
+    function establecerFecha() {
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const fecha = new Date();
+        const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+        fechaInput.value = fechaFormateada;
+    }
 
-            // --- INITIALIZATION ---
-            setTodayDate();
-            updateAllUI();
-            switchPage('rubros');
+    function guardarSolicitud() {
+        const items = [];
+        tablaCuerpo.querySelectorAll('tr').forEach(fila => {
+            const textareas = fila.querySelectorAll('textarea');
+            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
+        const solicitud = {
+            creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
+            numero: noSolicitudInput.value || 'N/A',
+            fecha: fechaInput.value,
+            items: items
+        };
+        db.collection("solicitudes").add(solicitud)
+            .then(() => {
+                alert('¡Solicitud guardada con éxito en la nube!');
+                limpiarFormulario();
+            })
+            .catch((error) => console.error("Error al guardar: ", error));
+    }
+    
+    function mostrarSolicitudesGuardadas() {
+        db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
+            listaSolicitudesUI.innerHTML = '';
+            querySnapshot.forEach((doc) => {
+                const solicitud = doc.data();
+                const li = document.createElement('li');
+                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
+                listaSolicitudesUI.appendChild(li);
+            });
+        });
+    }
+
+    // ***** CAMBIO AQUÍ: Función `cargarSolicitud` actualizada *****
+    function cargarSolicitud(id) {
+        db.collection("solicitudes").doc(id).get().then((doc) => {
+            if (doc.exists) {
+                const solicitudACargar = doc.data();
+                noSolicitudInput.value = solicitudACargar.numero;
+                fechaInput.value = solicitudACargar.fecha;
+                tablaCuerpo.innerHTML = '';
+                solicitudACargar.items.forEach(item => agregarFila(item));
+                
+                // Después de agregar todas las filas, ajustamos la altura de cada textarea
+                tablaCuerpo.querySelectorAll('textarea').forEach(textarea => {
+                    ajustarAlturaTextarea(textarea);
+                });
+
+                openTab('solicitud');
+            } else {
+                alert("No se encontró la solicitud.");
+            }
+        }).catch(error => console.error("Error al cargar: ", error));
+    }
+
+    function eliminarSolicitud(id) {
+        db.collection("solicitudes").doc(id).delete()
+            .catch(error => console.error("Error al eliminar: ", error));
+    }
+    
+    // Este listener ajusta la altura MIENTRAS ESCRIBES
+    tablaCuerpo.addEventListener('input', e => {
+        if (e.target.tagName.toLowerCase() === 'textarea') {
+            ajustarAlturaTextarea(e.target);
+        }
+    });
+
+    // El resto de los event listeners no cambian
+    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+    document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
+    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+        document.body.classList.add('printing-historial');
+        window.print();
+    });
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-historial');
+    });
+    listaSolicitudesUI.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
+        if (e.target.classList.contains('btn-eliminar')) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
+        }
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        limpiarFormulario();
+        mostrarSolicitudesGuardadas();
+        openTab('solicitud'); 
+    });
     </script>
 </body>
 </html>
