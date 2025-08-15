@@ -97,22 +97,21 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    // ***** CAMBIO AQUÍ: Configuración de Firebase *****
-    // PEGA AQUÍ el código `firebaseConfig` que copiaste de la página de Firebase.
+    // ***** Tus llaves de Firebase han sido insertadas aquí *****
     const firebaseConfig = {
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_AUTH_DOMAIN",
-        projectId: "TU_PROJECT_ID",
-        storageBucket: "TU_STORAGE_BUCKET",
-        messagingSenderId: "TU_MESSAGING_SENDER_ID",
-        appId: "TU_APP_ID"
+      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
+      authDomain: "solicitud-mat.firebaseapp.com",
+      projectId: "solicitud-mat",
+      storageBucket: "solicitud-mat.appspot.com",
+      messagingSenderId: "562521909209",
+      appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
     };
 
     // Inicializa Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore(); // Referencia a nuestra base de datos Firestore
+    const db = firebase.firestore();
 
-    // --- El resto del script se actualiza para usar Firebase en lugar de LocalStorage ---
+    // --- El resto del script se actualiza para usar Firebase ---
     
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -147,7 +146,6 @@
         fechaInput.value = fechaFormateada;
     }
 
-    // ***** CAMBIO AQUÍ: Función `guardarSolicitud` actualizada para Firebase *****
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
@@ -155,14 +153,12 @@
             items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
         const solicitud = {
-            // Usamos un timestamp para poder ordenar las solicitudes por fecha de creación
             creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
             items: items
         };
         
-        // Añade un nuevo "documento" a nuestra "colección" de solicitudes
         db.collection("solicitudes").add(solicitud)
             .then(() => {
                 alert('¡Solicitud guardada con éxito en la nube!');
@@ -174,22 +170,18 @@
             });
     }
     
-    // ***** CAMBIO AQUÍ: Función `mostrarSolicitudesGuardadas` actualizada para Firebase *****
-    // Esta función ahora escucha cambios en tiempo real.
     function mostrarSolicitudesGuardadas() {
         db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
             listaSolicitudesUI.innerHTML = '';
             querySnapshot.forEach((doc) => {
                 const solicitud = doc.data();
                 const li = document.createElement('li');
-                // Ahora usamos doc.id que es el identificador único de Firebase
                 li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
                 listaSolicitudesUI.appendChild(li);
             });
         });
     }
 
-    // ***** CAMBIO AQUÍ: Función `cargarSolicitud` actualizada para Firebase *****
     function cargarSolicitud(id) {
         db.collection("solicitudes").doc(id).get().then((doc) => {
             if (doc.exists) {
@@ -205,15 +197,11 @@
         }).catch(error => console.error("Error al cargar: ", error));
     }
 
-    // ***** CAMBIO AQUÍ: Función `eliminarSolicitud` actualizada para Firebase *****
     function eliminarSolicitud(id) {
         db.collection("solicitudes").doc(id).delete()
-            .then(() => {
-                // La lista se actualiza sola gracias a onSnapshot, no necesitamos hacer nada más.
-            }).catch(error => console.error("Error al eliminar: ", error));
+            .catch(error => console.error("Error al eliminar: ", error));
     }
     
-    // El resto de los event listeners no necesitan cambios en su declaración
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
             const textarea = e.target;
@@ -243,7 +231,7 @@
     
     document.addEventListener('DOMContentLoaded', () => {
         limpiarFormulario();
-        mostrarSolicitudesGuardadas(); // Inicia la escucha de datos en tiempo real
+        mostrarSolicitudesGuardadas();
         openTab('solicitud'); 
     });
     </script>
