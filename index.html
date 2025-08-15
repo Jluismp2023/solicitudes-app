@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitud de Materiales</title>
     <style>
+        /* Los estilos CSS no cambian */
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
         .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .tabs { display: flex; background-color: #004a99; }
@@ -63,12 +64,9 @@
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
         </div>
-
         <div id="solicitud" class="tab-content active">
             <div class="header">
-                <div class="header-logo">
-                    <img src="IMG-20250724-WA0025.jpg" alt="Logo Consorcio General Gallardo Pasaje">
-                </div>
+                <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
                 <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
                 <div class="solicitud-box"><label for="no_solicitud">No. SOLICITUD</label><input type="text" id="no_solicitud"></div>
             </div>
@@ -88,113 +86,166 @@
                 <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
         </div>
-
         <div id="historial" class="tab-content">
             <h2>Historial de Solicitudes</h2>
-            <div class="history-actions">
-                <button id="btn-imprimir-historial">🖨️ Imprimir Historial</button>
-            </div>
+            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        // El JavaScript no necesita cambios
-        function openTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
-        }
-        const noSolicitudInput = document.getElementById('no_solicitud');
-        const fechaInput = document.getElementById('fecha-input');
-        const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
-        const listaSolicitudesUI = document.getElementById('lista-solicitudes');
-        function limpiarFormulario() {
-            noSolicitudInput.value = '';
-            establecerFecha();
-            tablaCuerpo.innerHTML = '';
-            for (let i = 0; i < 5; i++) agregarFila();
-        }
-        function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
-            const fila = document.createElement('tr');
-            const itemCount = tablaCuerpo.rows.length + 1;
-            fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
-            tablaCuerpo.appendChild(fila);
-        }
-        function establecerFecha() {
-            const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-            const fecha = new Date();
-            const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
-            fechaInput.value = fechaFormateada;
-        }
-        function guardarSolicitud() {
-            const items = [];
-            tablaCuerpo.querySelectorAll('tr').forEach(fila => {
-                const textareas = fila.querySelectorAll('textarea');
-                items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
+    // ***** CAMBIO AQUÍ: Configuración de Firebase *****
+    // PEGA AQUÍ el código `firebaseConfig` que copiaste de la página de Firebase.
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_AUTH_DOMAIN",
+        projectId: "TU_PROJECT_ID",
+        storageBucket: "TU_STORAGE_BUCKET",
+        messagingSenderId: "TU_MESSAGING_SENDER_ID",
+        appId: "TU_APP_ID"
+    };
+
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); // Referencia a nuestra base de datos Firestore
+
+    // --- El resto del script se actualiza para usar Firebase en lugar de LocalStorage ---
+    
+    function openTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    }
+
+    const noSolicitudInput = document.getElementById('no_solicitud');
+    const fechaInput = document.getElementById('fecha-input');
+    const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
+    const listaSolicitudesUI = document.getElementById('lista-solicitudes');
+    
+    function limpiarFormulario() {
+        noSolicitudInput.value = '';
+        establecerFecha();
+        tablaCuerpo.innerHTML = '';
+        for (let i = 0; i < 5; i++) agregarFila();
+    }
+
+    function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
+        const fila = document.createElement('tr');
+        const itemCount = tablaCuerpo.rows.length + 1;
+        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
+        tablaCuerpo.appendChild(fila);
+    }
+
+    function establecerFecha() {
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const fecha = new Date();
+        const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+        fechaInput.value = fechaFormateada;
+    }
+
+    // ***** CAMBIO AQUÍ: Función `guardarSolicitud` actualizada para Firebase *****
+    function guardarSolicitud() {
+        const items = [];
+        tablaCuerpo.querySelectorAll('tr').forEach(fila => {
+            const textareas = fila.querySelectorAll('textarea');
+            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
+        });
+        const solicitud = {
+            // Usamos un timestamp para poder ordenar las solicitudes por fecha de creación
+            creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
+            numero: noSolicitudInput.value || 'N/A',
+            fecha: fechaInput.value,
+            items: items
+        };
+        
+        // Añade un nuevo "documento" a nuestra "colección" de solicitudes
+        db.collection("solicitudes").add(solicitud)
+            .then(() => {
+                alert('¡Solicitud guardada con éxito en la nube!');
+                limpiarFormulario();
+            })
+            .catch((error) => {
+                console.error("Error al guardar: ", error);
+                alert("Hubo un error al guardar la solicitud.");
             });
-            const solicitud = { id: Date.now(), numero: noSolicitudInput.value || 'N/A', fecha: fechaInput.value, items: items };
-            const solicitudesGuardadas = JSON.parse(localStorage.getItem('solicitudes')) || [];
-            solicitudesGuardadas.push(solicitud);
-            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
-            alert('¡Solicitud guardada con éxito!');
-            mostrarSolicitudesGuardadas();
-        }
-        function mostrarSolicitudesGuardadas() {
-            const solicitudes = JSON.parse(localStorage.getItem('solicitudes')) || [];
+    }
+    
+    // ***** CAMBIO AQUÍ: Función `mostrarSolicitudesGuardadas` actualizada para Firebase *****
+    // Esta función ahora escucha cambios en tiempo real.
+    function mostrarSolicitudesGuardadas() {
+        db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
             listaSolicitudesUI.innerHTML = '';
-            solicitudes.forEach(solicitud => {
+            querySnapshot.forEach((doc) => {
+                const solicitud = doc.data();
                 const li = document.createElement('li');
-                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${solicitud.id}">Cargar</button><button class="btn-eliminar" data-id="${solicitud.id}">Eliminar</button></div>`;
+                // Ahora usamos doc.id que es el identificador único de Firebase
+                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
                 listaSolicitudesUI.appendChild(li);
             });
-        }
-        function cargarSolicitud(id) {
-            const solicitudACargar = (JSON.parse(localStorage.getItem('solicitudes')) || []).find(s => s.id == id);
-            if (solicitudACargar) {
+        });
+    }
+
+    // ***** CAMBIO AQUÍ: Función `cargarSolicitud` actualizada para Firebase *****
+    function cargarSolicitud(id) {
+        db.collection("solicitudes").doc(id).get().then((doc) => {
+            if (doc.exists) {
+                const solicitudACargar = doc.data();
                 noSolicitudInput.value = solicitudACargar.numero;
                 fechaInput.value = solicitudACargar.fecha;
                 tablaCuerpo.innerHTML = '';
                 solicitudACargar.items.forEach(item => agregarFila(item));
                 openTab('solicitud');
+            } else {
+                alert("No se encontró la solicitud.");
             }
+        }).catch(error => console.error("Error al cargar: ", error));
+    }
+
+    // ***** CAMBIO AQUÍ: Función `eliminarSolicitud` actualizada para Firebase *****
+    function eliminarSolicitud(id) {
+        db.collection("solicitudes").doc(id).delete()
+            .then(() => {
+                // La lista se actualiza sola gracias a onSnapshot, no necesitamos hacer nada más.
+            }).catch(error => console.error("Error al eliminar: ", error));
+    }
+    
+    // El resto de los event listeners no necesitan cambios en su declaración
+    tablaCuerpo.addEventListener('input', e => {
+        if (e.target.tagName.toLowerCase() === 'textarea') {
+            const textarea = e.target;
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
         }
-        function eliminarSolicitud(id) {
-            let solicitudesGuardadas = (JSON.parse(localStorage.getItem('solicitudes')) || []).filter(s => s.id != id);
-            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
-            mostrarSolicitudesGuardadas();
+    });
+
+    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+    document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
+    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+        document.body.classList.add('printing-historial');
+        window.print();
+    });
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-historial');
+    });
+    listaSolicitudesUI.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
+        if (e.target.classList.contains('btn-eliminar')) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
         }
-        tablaCuerpo.addEventListener('input', e => {
-            if (e.target.tagName.toLowerCase() === 'textarea') {
-                const textarea = e.target;
-                textarea.style.height = 'auto';
-                textarea.style.height = `${textarea.scrollHeight}px`;
-            }
-        });
-        document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
-        document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
-        document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-        document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
-        document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-            document.body.classList.add('printing-historial');
-            window.print();
-        });
-        window.addEventListener('afterprint', () => {
-            document.body.classList.remove('printing-historial');
-        });
-        listaSolicitudesUI.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
-            if (e.target.classList.contains('btn-eliminar')) {
-                if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
-            }
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            limpiarFormulario();
-            mostrarSolicitudesGuardadas();
-            openTab('solicitud'); 
-        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        limpiarFormulario();
+        mostrarSolicitudesGuardadas(); // Inicia la escucha de datos en tiempo real
+        openTab('solicitud'); 
+    });
     </script>
 </body>
 </html>
