@@ -183,7 +183,10 @@
                 fechaInput.value = solicitudACargar.fecha;
                 tablaCuerpo.innerHTML = '';
                 solicitudACargar.items.forEach(item => agregarFila(item));
-                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
+                // Asegura que el DOM se actualice antes de ajustar la altura
+                setTimeout(() => {
+                    tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
+                }, 0);
                 openTab('solicitud');
             } else {
                 alert("No se encontró la solicitud.");
