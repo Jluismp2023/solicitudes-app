@@ -29,8 +29,7 @@
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
-        .actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .history-actions { margin-bottom: 20px; }
+        .actions, .history-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #btn-agregar { background-color: #28a745; }
         #btn-guardar { background-color: #007bff; }
@@ -197,10 +196,9 @@
             .catch(error => console.error("Error al eliminar: ", error));
     }
     
-    // ***** LA CORRECCIÓN ESTÁ AQUÍ *****
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
-            ajustarAlturaTextarea(e.target); // Corregido de 'e.targget' a 'e.target'
+            ajustarAlturaTextarea(e.target);
         }
     });
 
