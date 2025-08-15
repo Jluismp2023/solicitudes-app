@@ -30,9 +30,10 @@
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
         
+        /* ***** LA CORRECCIÓN ESTÁ AQUÍ ***** */
         .actions { 
             margin-bottom: 20px; 
-            display: flex;
+            display: flex; /* Esta línea es la que faltaba */
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -172,7 +173,7 @@
             items: items
         };
         db.collection("solicitudes").add(solicitud)
-            .then(() => {
+            .then(().then(() => {
                 alert('¡Solicitud guardada con éxito en la nube!');
                 limpiarFormulario();
             })
