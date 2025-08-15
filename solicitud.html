@@ -29,18 +29,27 @@
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
-        .actions, .history-actions { margin-bottom: 20px; }
-        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin-right: 10px; }
-        #btn-agregar { background-color: #28a745; color: white; }
-        #btn-guardar { background-color: #007bff; color: white; }
+        
+        .actions { 
+            margin-bottom: 20px; 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .history-actions { margin-bottom: 20px; }
+        
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
+        #btn-agregar { background-color: #28a745; }
+        #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
-        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; color: white; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
+        
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .btn-cargar { background-color: #17a2b8; color: white; margin: 5px; }
-        .btn-eliminar { background-color: #dc3545; color: white; margin: 5px; }
+        .btn-cargar { background-color: #17a2b8; margin: 5px; }
+        .btn-eliminar { background-color: #dc3545; margin: 5px; }
 
         @media print {
             body { margin: 20px; background-color: #fff; }
@@ -63,12 +72,9 @@
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
         </div>
-
         <div id="solicitud" class="tab-content active">
             <div class="header">
-                <div class="header-logo">
-                    <img src="IMG-20250724-WA0025.jpg" alt="Logo Consorcio General Gallardo Pasaje">
-                </div>
+                <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
                 <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
                 <div class="solicitud-box"><label for="no_solicitud">No. SOLICITUD</label><input type="text" id="no_solicitud"></div>
             </div>
@@ -78,8 +84,10 @@
                 <tbody></tbody>
             </table>
             <div class="actions">
-                <button id="btn-agregar">➕ Agregar Fila</button><button id="btn-guardar">💾 Guardar Solicitud</button>
-                <button id="btn-limpiar">📄 Limpiar Formulario</button><button id="btn-imprimir">🖨️ Imprimir</button>
+                <button id="btn-agregar">➕ Agregar Fila</button>
+                <button id="btn-guardar">💾 Guardar Solicitud</button>
+                <button id="btn-limpiar">📄 Limpiar Formulario</button>
+                <button id="btn-imprimir">🖨️ Imprimir</button>
             </div>
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
@@ -88,113 +96,152 @@
                 <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
         </div>
-
         <div id="historial" class="tab-content">
             <h2>Historial de Solicitudes</h2>
-            <div class="history-actions">
-                <button id="btn-imprimir-historial">🖨️ Imprimir Historial</button>
-            </div>
+            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        // El JavaScript no necesita cambios
-        function openTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
-        }
-        const noSolicitudInput = document.getElementById('no_solicitud');
-        const fechaInput = document.getElementById('fecha-input');
-        const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
-        const listaSolicitudesUI = document.getElementById('lista-solicitudes');
-        function limpiarFormulario() {
-            noSolicitudInput.value = '';
-            establecerFecha();
-            tablaCuerpo.innerHTML = '';
-            for (let i = 0; i < 5; i++) agregarFila();
-        }
-        function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
-            const fila = document.createElement('tr');
-            const itemCount = tablaCuerpo.rows.length + 1;
-            fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
-            tablaCuerpo.appendChild(fila);
-        }
-        function establecerFecha() {
-            const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-            const fecha = new Date();
-            const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
-            fechaInput.value = fechaFormateada;
-        }
-        function guardarSolicitud() {
-            const items = [];
-            tablaCuerpo.querySelectorAll('tr').forEach(fila => {
-                const textareas = fila.querySelectorAll('textarea');
-                items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
-            });
-            const solicitud = { id: Date.now(), numero: noSolicitudInput.value || 'N/A', fecha: fechaInput.value, items: items };
-            const solicitudesGuardadas = JSON.parse(localStorage.getItem('solicitudes')) || [];
-            solicitudesGuardadas.push(solicitud);
-            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
-            alert('¡Solicitud guardada con éxito!');
-            mostrarSolicitudesGuardadas();
-        }
-        function mostrarSolicitudesGuardadas() {
-            const solicitudes = JSON.parse(localStorage.getItem('solicitudes')) || [];
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
+      authDomain: "solicitud-mat.firebaseapp.com",
+      projectId: "solicitud-mat",
+      storageBucket: "solicitud-mat.appspot.com",
+      messagingSenderId: "562521909209",
+      appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
+    };
+
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function openTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    }
+
+    const noSolicitudInput = document.getElementById('no_solicitud');
+    const fechaInput = document.getElementById('fecha-input');
+    const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
+    const listaSolicitudesUI = document.getElementById('lista-solicitudes');
+    
+    function ajustarAlturaTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+    
+    function limpiarFormulario() {
+        noSolicitudInput.value = '';
+        establecerFecha();
+        tablaCuerpo.innerHTML = '';
+        for (let i = 0; i < 5; i++) agregarFila();
+    }
+
+    function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
+        const fila = document.createElement('tr');
+        const itemCount = tablaCuerpo.rows.length + 1;
+        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
+        tablaCuerpo.appendChild(fila);
+    }
+
+    function establecerFecha() {
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const fecha = new Date();
+        const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+        fechaInput.value = fechaFormateada;
+    }
+
+    function guardarSolicitud() {
+        const items = [];
+        tablaCuerpo.querySelectorAll('tr').forEach(fila => {
+            const textareas = fila.querySelectorAll('textarea');
+            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
+        });
+        const solicitud = {
+            creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
+            numero: noSolicitudInput.value || 'N/A',
+            fecha: fechaInput.value,
+            items: items
+        };
+        db.collection("solicitudes").add(solicitud)
+            .then(() => {
+                alert('¡Solicitud guardada con éxito en la nube!');
+                limpiarFormulario();
+            })
+            .catch((error) => console.error("Error al guardar: ", error));
+    }
+    
+    function mostrarSolicitudesGuardadas() {
+        db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
             listaSolicitudesUI.innerHTML = '';
-            solicitudes.forEach(solicitud => {
+            querySnapshot.forEach((doc) => {
+                const solicitud = doc.data();
                 const li = document.createElement('li');
-                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${solicitud.id}">Cargar</button><button class="btn-eliminar" data-id="${solicitud.id}">Eliminar</button></div>`;
+                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
                 listaSolicitudesUI.appendChild(li);
             });
-        }
-        function cargarSolicitud(id) {
-            const solicitudACargar = (JSON.parse(localStorage.getItem('solicitudes')) || []).find(s => s.id == id);
-            if (solicitudACargar) {
+        });
+    }
+
+    function cargarSolicitud(id) {
+        db.collection("solicitudes").doc(id).get().then((doc) => {
+            if (doc.exists) {
+                const solicitudACargar = doc.data();
                 noSolicitudInput.value = solicitudACargar.numero;
                 fechaInput.value = solicitudACargar.fecha;
                 tablaCuerpo.innerHTML = '';
                 solicitudACargar.items.forEach(item => agregarFila(item));
+                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
                 openTab('solicitud');
+            } else {
+                alert("No se encontró la solicitud.");
             }
+        }).catch(error => console.error("Error al cargar: ", error));
+    }
+
+    function eliminarSolicitud(id) {
+        db.collection("solicitudes").doc(id).delete()
+            .catch(error => console.error("Error al eliminar: ", error));
+    }
+    
+    tablaCuerpo.addEventListener('input', e => {
+        if (e.target.tagName.toLowerCase() === 'textarea') {
+            ajustarAlturaTextarea(e.target);
         }
-        function eliminarSolicitud(id) {
-            let solicitudesGuardadas = (JSON.parse(localStorage.getItem('solicitudes')) || []).filter(s => s.id != id);
-            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
-            mostrarSolicitudesGuardadas();
+    });
+
+    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+    document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
+    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+        document.body.classList.add('printing-historial');
+        window.print();
+    });
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-historial');
+    });
+    listaSolicitudesUI.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
+        if (e.target.classList.contains('btn-eliminar')) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
         }
-        tablaCuerpo.addEventListener('input', e => {
-            if (e.target.tagName.toLowerCase() === 'textarea') {
-                const textarea = e.target;
-                textarea.style.height = 'auto';
-                textarea.style.height = `${textarea.scrollHeight}px`;
-            }
-        });
-        document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
-        document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
-        document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-        document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
-        document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-            document.body.classList.add('printing-historial');
-            window.print();
-        });
-        window.addEventListener('afterprint', () => {
-            document.body.classList.remove('printing-historial');
-        });
-        listaSolicitudesUI.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
-            if (e.target.classList.contains('btn-eliminar')) {
-                if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
-            }
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            limpiarFormulario();
-            mostrarSolicitudesGuardadas();
-            openTab('solicitud'); 
-        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        limpiarFormulario();
+        mostrarSolicitudesGuardadas();
+        openTab('solicitud'); 
+    });
     </script>
 </body>
 </html>
