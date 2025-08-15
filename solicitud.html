@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Materiales</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
+        .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .tabs { display: flex; background-color: #004a99; }
+        .tab-button { padding: 15px 20px; cursor: pointer; border: none; background-color: #004a99; color: white; font-size: 16px; transition: background-color 0.3s; }
+        .tab-button:hover { background-color: #005cbf; }
+        .tab-button.active { background-color: #fff; color: #004a99; font-weight: bold; }
+        .tab-content { display: none; padding: 20px; border: 2px solid #004a99; border-top: none; }
+        .tab-content.active { display: block; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px; }
+        .header-logo img { width: 200px; height: auto; margin-right: 15px; }
+        .header-title { text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99; }
+        .solicitud-box { border: 1px solid black; padding: 5px; }
+        .solicitud-box label { display: block; font-weight: bold; }
+        .solicitud-box input { border: none; width: 150px; text-align: center; }
+        .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        td.item-column { font-weight: bold; padding-top: 12px; }
+        .date-section { margin-bottom: 100px; }
+        #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
+        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
+        .signature-block { width: 250px; }
+        .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
+        .actions, .history-actions { margin-bottom: 20px; }
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin-right: 10px; }
+        #btn-agregar { background-color: #28a745; color: white; }
+        #btn-guardar { background-color: #007bff; color: white; }
+        #btn-limpiar { background-color: #ffc107; color: black; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; color: white; }
+        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
+        #historial h2 { text-align: center; color: #004a99; }
+        #lista-solicitudes { list-style: none; padding: 0; }
+        #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .btn-cargar { background-color: #17a2b8; color: white; margin: 5px; }
+        .btn-eliminar { background-color: #dc3545; color: white; margin: 5px; }
+
+        @media print {
+            body { margin: 20px; background-color: #fff; }
+            .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
+            .tabs, .actions, .history-actions { display: none; }
+            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
+            body:not(.printing-historial) #historial { display: none; }
+            body:not(.printing-historial) #solicitud { display: block; }
+            body.printing-historial #solicitud { display: none; }
+            body.printing-historial #historial { display: block; }
+            body.printing-historial #lista-solicitudes .btn-cargar,
+            body.printing-historial #lista-solicitudes .btn-eliminar { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
+            <button class="tab-button" onclick="openTab('historial')">Historial</button>
+        </div>
+
+        <div id="solicitud" class="tab-content active">
+            <div class="header">
+                <div class="header-logo">
+                    <img src="IMG-20250724-WA0025.jpg" alt="Logo Consorcio General Gallardo Pasaje">
+                </div>
+                <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+                <div class="solicitud-box"><label for="no_solicitud">No. SOLICITUD</label><input type="text" id="no_solicitud"></div>
+            </div>
+            <h3 class="materials-title">MATERIALES</h3>
+            <table id="tabla-materiales">
+                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="actions">
+                <button id="btn-agregar">➕ Agregar Fila</button><button id="btn-guardar">💾 Guardar Solicitud</button>
+                <button id="btn-limpiar">📄 Limpiar Formulario</button><button id="btn-imprimir">🖨️ Imprimir</button>
+            </div>
+            <div class="date-section"><input type="text" id="fecha-input"></div>
+            <div class="signatures">
+                <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
+                <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+            </div>
+        </div>
+
+        <div id="historial" class="tab-content">
+            <h2>Historial de Solicitudes</h2>
+            <div class="history-actions">
+                <button id="btn-imprimir-historial">🖨️ Imprimir Historial</button>
+            </div>
+            <ul id="lista-solicitudes"></ul>
+        </div>
+    </div>
+
+    <script>
+        // El JavaScript no necesita cambios
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+        }
+        const noSolicitudInput = document.getElementById('no_solicitud');
+        const fechaInput = document.getElementById('fecha-input');
+        const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
+        const listaSolicitudesUI = document.getElementById('lista-solicitudes');
+        function limpiarFormulario() {
+            noSolicitudInput.value = '';
+            establecerFecha();
+            tablaCuerpo.innerHTML = '';
+            for (let i = 0; i < 5; i++) agregarFila();
+        }
+        function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
+            const fila = document.createElement('tr');
+            const itemCount = tablaCuerpo.rows.length + 1;
+            fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
+            tablaCuerpo.appendChild(fila);
+        }
+        function establecerFecha() {
+            const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+            const fecha = new Date();
+            const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+            fechaInput.value = fechaFormateada;
+        }
+        function guardarSolicitud() {
+            const items = [];
+            tablaCuerpo.querySelectorAll('tr').forEach(fila => {
+                const textareas = fila.querySelectorAll('textarea');
+                items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
+            });
+            const solicitud = { id: Date.now(), numero: noSolicitudInput.value || 'N/A', fecha: fechaInput.value, items: items };
+            const solicitudesGuardadas = JSON.parse(localStorage.getItem('solicitudes')) || [];
+            solicitudesGuardadas.push(solicitud);
+            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
+            alert('¡Solicitud guardada con éxito!');
+            mostrarSolicitudesGuardadas();
+        }
+        function mostrarSolicitudesGuardadas() {
+            const solicitudes = JSON.parse(localStorage.getItem('solicitudes')) || [];
+            listaSolicitudesUI.innerHTML = '';
+            solicitudes.forEach(solicitud => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${solicitud.id}">Cargar</button><button class="btn-eliminar" data-id="${solicitud.id}">Eliminar</button></div>`;
+                listaSolicitudesUI.appendChild(li);
+            });
+        }
+        function cargarSolicitud(id) {
+            const solicitudACargar = (JSON.parse(localStorage.getItem('solicitudes')) || []).find(s => s.id == id);
+            if (solicitudACargar) {
+                noSolicitudInput.value = solicitudACargar.numero;
+                fechaInput.value = solicitudACargar.fecha;
+                tablaCuerpo.innerHTML = '';
+                solicitudACargar.items.forEach(item => agregarFila(item));
+                openTab('solicitud');
+            }
+        }
+        function eliminarSolicitud(id) {
+            let solicitudesGuardadas = (JSON.parse(localStorage.getItem('solicitudes')) || []).filter(s => s.id != id);
+            localStorage.setItem('solicitudes', JSON.stringify(solicitudesGuardadas));
+            mostrarSolicitudesGuardadas();
+        }
+        tablaCuerpo.addEventListener('input', e => {
+            if (e.target.tagName.toLowerCase() === 'textarea') {
+                const textarea = e.target;
+                textarea.style.height = 'auto';
+                textarea.style.height = `${textarea.scrollHeight}px`;
+            }
+        });
+        document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+        document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+        document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+        document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
+        document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+            document.body.classList.add('printing-historial');
+            window.print();
+        });
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('printing-historial');
+        });
+        listaSolicitudesUI.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
+            if (e.target.classList.contains('btn-eliminar')) {
+                if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            limpiarFormulario();
+            mostrarSolicitudesGuardadas();
+            openTab('solicitud'); 
+        });
+    </script>
+</body>
+</html>
