@@ -30,14 +30,14 @@
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
         
-        /* ***** CAMBIO AQUÍ: Estilos para alinear los botones ***** */
         .actions { 
             margin-bottom: 20px; 
-            display: flex; /* Activa Flexbox */
-            flex-wrap: wrap; /* Permite que los botones pasen a la siguiente línea si no caben */
-            gap: 10px; /* Espacio entre botones */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .history-actions { margin-bottom: 20px; }
+        
         button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #btn-agregar { background-color: #28a745; }
         #btn-guardar { background-color: #007bff; }
@@ -83,7 +83,7 @@
                 <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
                 <tbody></tbody>
             </table>
-             <div class="actions">
+            <div class="actions">
                 <button id="btn-agregar">➕ Agregar Fila</button>
                 <button id="btn-guardar">💾 Guardar Solicitud</button>
                 <button id="btn-limpiar">📄 Limpiar Formulario</button>
