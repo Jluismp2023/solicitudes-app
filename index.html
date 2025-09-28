@@ -28,7 +28,6 @@
         th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
-        /* ***** CAMBIO AQUÍ: Aumentado el espacio para las firmas ***** */
         .date-section { margin-bottom: 100px; }
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
@@ -252,6 +251,7 @@
         }
     });
     
+    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
         printContainer.innerHTML = '';
@@ -261,7 +261,7 @@
                 itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
             const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
-            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="date-section"><strong>${solicitud.fecha}</strong></div><div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
+            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
             printContainer.innerHTML += solicitudHtml;
         });
         document.body.classList.add('printing-historial');
