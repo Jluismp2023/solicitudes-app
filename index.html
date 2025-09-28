@@ -28,7 +28,8 @@
         th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
-        .date-section { margin-bottom: 20px; }
+        /* ***** CAMBIO AQUÍ: Aumentado el espacio para las firmas ***** */
+        .date-section { margin-bottom: 100px; }
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
@@ -53,21 +54,11 @@
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
             .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; }
-            
-            /* ***** CAMBIO AQUÍ: Oculta la última columna de la tabla al imprimir ***** */
-            th:last-child, td:last-child {
-                display: none;
-            }
-
-            /* Muestra las firmas solo al imprimir la solicitud, no el historial */
-            body:not(.printing-historial) .signatures {
-                display: flex;
-            }
-
+            th:last-child, td:last-child { display: none; }
+            body:not(.printing-historial) .signatures { display: flex; }
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
-            
             .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
