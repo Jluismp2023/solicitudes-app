@@ -68,6 +68,8 @@
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
         </div>
         <div id="solicitud" class="tab-content active">
+            <input type="hidden" id="editing-solicitud-id">
+
             <div class="header">
                 <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
                 <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
@@ -120,6 +122,8 @@
     const fechaInput = document.getElementById('fecha-input');
     const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
     const listaSolicitudesUI = document.getElementById('lista-solicitudes');
+    const editingSolicitudId = document.getElementById('editing-solicitud-id');
+    const btnGuardar = document.getElementById('btn-guardar');
     
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -131,61 +135,67 @@
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
+
+    // ***** CAMBIO AQUÍ: La función de limpiar ahora también resetea el modo de edición *****
     function limpiarFormulario() {
         noSolicitudInput.value = '';
+        editingSolicitudId.value = ''; // Limpia el ID de edición
+        btnGuardar.textContent = '💾 Guardar Solicitud'; // Restaura el texto del botón
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         for (let i = 0; i < 5; i++) agregarFila();
     }
-
-    // ***** CAMBIO AQUÍ: Función para renumerar los ítems de la tabla *****
+    
     function renumerarItems() {
-        const filas = tablaCuerpo.querySelectorAll('tr');
-        filas.forEach((fila, index) => {
+        tablaCuerpo.querySelectorAll('tr').forEach((fila, index) => {
             fila.querySelector('.item-column').textContent = index + 1;
         });
     }
-
-    // ***** CAMBIO AQUÍ: Se añade el botón de eliminar en cada fila *****
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
-        fila.innerHTML = `
-            <td class="item-column">${itemCount}</td>
-            <td><textarea rows="1">${item.cantidad}</textarea></td>
-            <td><textarea rows="1">${item.unidad}</textarea></td>
-            <td><textarea rows="1">${item.detalle}</textarea></td>
-            <td><textarea rows="1">${item.obs}</textarea></td>
-            <td><textarea rows="1">${item.rubro}</textarea></td>
-            <td><button class="btn-eliminar-fila">🗑️</button></td>
-        `;
+        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td><td><button class="btn-eliminar-fila">🗑️</button></td>`;
         tablaCuerpo.appendChild(fila);
     }
-
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
         const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
         fechaInput.value = fechaFormateada;
     }
+
+    // ***** CAMBIO AQUÍ: La función ahora decide si crear una nueva o actualizar una existente *****
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
             items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
-        const solicitud = {
-            creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
+        const solicitudData = {
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
-            items: items
+            items: items,
         };
-        db.collection("solicitudes").add(solicitud)
-            .then(() => {
-                alert('¡Solicitud guardada con éxito en la nube!');
-                limpiarFormulario();
-            })
-            .catch((error) => console.error("Error al guardar: ", error));
+
+        const id = editingSolicitudId.value;
+        if (id) {
+            // Si hay un ID, estamos EDITANDO
+            db.collection("solicitudes").doc(id).update(solicitudData)
+                .then(() => {
+                    alert('¡Solicitud actualizada con éxito!');
+                    limpiarFormulario();
+                })
+                .catch((error) => console.error("Error al actualizar: ", error));
+        } else {
+            // Si NO hay ID, estamos CREANDO una nueva
+            solicitudData.creadoEn = firebase.firestore.FieldValue.serverTimestamp(); 
+            db.collection("solicitudes").add(solicitudData)
+                .then(() => {
+                    alert('¡Solicitud guardada con éxito en la nube!');
+                    limpiarFormulario();
+                })
+                .catch((error) => console.error("Error al guardar: ", error));
+        }
     }
     
     function mostrarSolicitudesGuardadas() {
@@ -203,11 +213,15 @@
         });
     }
 
+    // ***** CAMBIO AQUÍ: La función de cargar ahora prepara el modo de edición *****
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         if (solicitudACargar) {
             noSolicitudInput.value = solicitudACargar.numero;
             fechaInput.value = solicitudACargar.fecha;
+            editingSolicitudId.value = id; // Guarda el ID para saber que estamos editando
+            btnGuardar.textContent = '💾 Guardar Cambios'; // Cambia el texto del botón
+            
             tablaCuerpo.innerHTML = '';
             solicitudACargar.items.forEach(item => agregarFila(item));
             setTimeout(() => {
@@ -229,66 +243,32 @@
             ajustarAlturaTextarea(e.target);
         }
     });
-
     tablaCuerpo.addEventListener('blur', (e) => {
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
             const valor = parseFloat(textarea.value);
-            if (!isNaN(valor)) {
-                textarea.value = valor.toFixed(2);
-            }
+            if (!isNaN(valor)) textarea.value = valor.toFixed(2);
         }
     }, true);
-
-    // ***** CAMBIO AQUÍ: Lógica para el botón de eliminar fila *****
     tablaCuerpo.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-eliminar-fila')) {
-            const filaParaEliminar = e.target.closest('tr');
-            filaParaEliminar.remove();
-            renumerarItems(); // Llama a la función para corregir los números de ítem
+            e.target.closest('tr').remove();
+            renumerarItems();
         }
     });
     
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
         printContainer.innerHTML = '';
-
         solicitudesCargadas.forEach((solicitud, index) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                itemsHtml += `
-                    <tr>
-                        <td class="item-column">${itemIndex + 1}</td>
-                        <td style="text-align:center;">${item.cantidad}</td>
-                        <td style="text-align:center;">${item.unidad}</td>
-                        <td style="text-align:center;">${item.detalle}</td>
-                        <td style="text-align:center;">${item.obs}</td>
-                        <td style="text-align:center;">${item.rubro}</td>
-                    </tr>
-                `;
+                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
-            const headerPrincipalHtml = index === 0 ? `
-                <div class="header">
-                    <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
-                    <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div>
-                </div>` : '';
-            const solicitudHtml = `
-                <div class="solicitud-impresa">
-                    ${headerPrincipalHtml}
-                    <div class="date-section"><strong>${solicitud.fecha}</strong></div>
-                    <div class="materials-header-print">
-                        <div class="title">MATERIALES</div>
-                        <div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div>
-                    </div>
-                    <table>
-                        <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-                </div>
-            `;
+            const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
+            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="date-section"><strong>${solicitud.fecha}</strong></div><div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
             printContainer.innerHTML += solicitudHtml;
         });
-
         document.body.classList.add('printing-historial');
         window.print();
     });
@@ -310,6 +290,7 @@
             if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
         }
     });
+    
     document.addEventListener('DOMContentLoaded', () => {
         limpiarFormulario();
         mostrarSolicitudesGuardadas();
