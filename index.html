@@ -21,7 +21,6 @@
         .solicitud-box input { border: none; width: 150px; text-align: center; }
         .solicitud-box-print-content { font-size: 1.1em; padding-top: 5px; }
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
-        /* Estilo para el contenedor del título de materiales en la impresión */
         .materials-header-print { display: flex; justify-content: space-between; align-items: center; background-color: #e0e0e0; border: 1px solid #333; }
         .materials-header-print .title { flex-grow: 1; text-align: center; font-weight: bold; color: #004a99; padding: 8px; }
         .materials-header-print .solicitud-num { font-weight: bold; padding: 8px; white-space: nowrap; }
@@ -56,8 +55,18 @@
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
-            /* Se elimina el salto de página para que las tablas sean continuas */
-            .solicitud-impresa { padding-top: 20px; margin-bottom: 30px; }
+            
+            /* ***** CAMBIO AQUÍ: Se añade el salto de página ***** */
+            .solicitud-impresa { 
+                padding-top: 20px; 
+                margin-bottom: 30px;
+                page-break-before: always; /* Cada solicitud empieza en una página nueva */
+            }
+             /* Evita que la PRIMERA solicitud tenga un espacio en blanco arriba */
+            .solicitud-impresa:first-child {
+                page-break-before: auto;
+            }
+
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
@@ -227,12 +236,12 @@
         const printContainer = document.getElementById('print-historial-detallado');
         printContainer.innerHTML = '';
 
-        solicitudesCargadas.forEach(solicitud => {
+        solicitudesCargadas.forEach((solicitud, index) => {
             let itemsHtml = '';
-            solicitud.items.forEach((item, index) => {
+            solicitud.items.forEach((item, itemIndex) => {
                 itemsHtml += `
                     <tr>
-                        <td class="item-column">${index + 1}</td>
+                        <td class="item-column">${itemIndex + 1}</td>
                         <td style="text-align:center;">${item.cantidad}</td>
                         <td style="text-align:center;">${item.unidad}</td>
                         <td style="text-align:center;">${item.detalle}</td>
@@ -241,15 +250,18 @@
                     </tr>
                 `;
             });
+            
+            // Solo la primera solicitud (index === 0) mostrará el encabezado principal
+            const headerPrincipalHtml = index === 0 ? `
+                <div class="header">
+                    <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
+                    <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div>
+                </div>` : '';
 
-            // Se modifica la estructura para la impresión
             const solicitudHtml = `
                 <div class="solicitud-impresa">
-                    <div class="header">
-                        <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
-                        <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div>
-                    </div>
-                     <div class="date-section"><strong>${solicitud.fecha}</strong></div>
+                    ${headerPrincipalHtml}
+                    <div class="date-section"><strong>${solicitud.fecha}</strong></div>
                     <div class="materials-header-print">
                         <div class="title">MATERIALES</div>
                         <div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div>
