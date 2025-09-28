@@ -35,38 +35,39 @@
         #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
+        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
         
-        /* Estilo general para textareas, alineado a la izquierda por defecto */
-        td textarea { 
-            width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; 
-            resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4;
-        }
-        
-        /* ***** CAMBIO AQUÍ: Se añadió la columna 4 (DETALLE DE ELEMENTOS) a la lista ***** */
-        td:nth-child(2) textarea,
-        td:nth-child(3) textarea,
-        td:nth-child(4) textarea,
-        td:nth-child(5) textarea,
-        td:nth-child(6) textarea {
-            text-align: center;
-        }
+        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(5) textarea, td:nth-child(6) textarea { text-align: center; }
 
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
+        
+        /* Contenedor oculto para la impresión detallada */
+        #print-historial-detallado { display: none; }
+
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions { display: none; }
-            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
-            body:not(.printing-historial) #historial { display: none; }
+            .tabs, .actions, .history-actions, #historial { display: none; }
+            
+            /* Lógica para imprimir el formulario o el historial detallado */
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
-            body.printing-historial #historial { display: block; }
-            body.printing-historial #lista-solicitudes .btn-cargar,
-            body.printing-historial #lista-solicitudes .btn-eliminar { display: none; }
+            body.printing-historial #print-historial-detallado { display: block; }
+            
+            /* Estilos para cada solicitud impresa en el historial */
+            .solicitud-impresa {
+                page-break-before: always; /* Cada solicitud empieza en una nueva página */
+                padding-top: 20px;
+            }
+            .solicitud-impresa:first-child {
+                page-break-before: auto; /* Evita un salto de página antes del primer elemento */
+            }
+            
+            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
 </head>
@@ -102,10 +103,13 @@
         </div>
         <div id="historial" class="tab-content">
             <h2>Historial de Solicitudes</h2>
-            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial</button></div>
+            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
     </div>
+
+    <div id="print-historial-detallado"></div>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
@@ -120,44 +124,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function openTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
-    }
+    // ***** CAMBIO AQUÍ: Variable para guardar los datos del historial *****
+    let solicitudesCargadas = [];
 
     const noSolicitudInput = document.getElementById('no_solicitud');
     const fechaInput = document.getElementById('fecha-input');
     const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
     const listaSolicitudesUI = document.getElementById('lista-solicitudes');
     
+    function openTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    }
     function ajustarAlturaTextarea(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
-    
     function limpiarFormulario() {
         noSolicitudInput.value = '';
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         for (let i = 0; i < 5; i++) agregarFila();
     }
-
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
         tablaCuerpo.appendChild(fila);
     }
-
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
         const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
         fechaInput.value = fechaFormateada;
     }
-
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
@@ -180,9 +182,13 @@
     
     function mostrarSolicitudesGuardadas() {
         db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
+            solicitudesCargadas = []; // Limpiamos antes de llenar
             listaSolicitudesUI.innerHTML = '';
             querySnapshot.forEach((doc) => {
                 const solicitud = doc.data();
+                solicitud.id = doc.id; // Añadimos el id al objeto
+                solicitudesCargadas.push(solicitud); // Guardamos la data en nuestra variable
+                
                 const li = document.createElement('li');
                 li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
                 listaSolicitudesUI.appendChild(li);
@@ -191,21 +197,19 @@
     }
 
     function cargarSolicitud(id) {
-        db.collection("solicitudes").doc(id).get().then((doc) => {
-            if (doc.exists) {
-                const solicitudACargar = doc.data();
-                noSolicitudInput.value = solicitudACargar.numero;
-                fechaInput.value = solicitudACargar.fecha;
-                tablaCuerpo.innerHTML = '';
-                solicitudACargar.items.forEach(item => agregarFila(item));
-                setTimeout(() => {
-                    tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
-                }, 0);
-                openTab('solicitud');
-            } else {
-                alert("No se encontró la solicitud.");
-            }
-        }).catch(error => console.error("Error al cargar: ", error));
+        const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
+        if (solicitudACargar) {
+            noSolicitudInput.value = solicitudACargar.numero;
+            fechaInput.value = solicitudACargar.fecha;
+            tablaCuerpo.innerHTML = '';
+            solicitudACargar.items.forEach(item => agregarFila(item));
+            setTimeout(() => {
+                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
+            }, 0);
+            openTab('solicitud');
+        } else {
+            alert("No se encontró la solicitud.");
+        }
     }
 
     function eliminarSolicitud(id) {
@@ -228,13 +232,61 @@
             }
         }
     }, true);
+    
+    // ***** CAMBIO AQUÍ: Lógica para el botón de imprimir historial detallado *****
+    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+        const printContainer = document.getElementById('print-historial-detallado');
+        printContainer.innerHTML = ''; // Limpia el contenedor
 
+        // Recorremos las solicitudes guardadas y creamos una vista de formulario para cada una
+        solicitudesCargadas.forEach(solicitud => {
+            let itemsHtml = '';
+            solicitud.items.forEach((item, index) => {
+                itemsHtml += `
+                    <tr>
+                        <td class="item-column">${index + 1}</td>
+                        <td>${item.cantidad}</td>
+                        <td>${item.unidad}</td>
+                        <td>${item.detalle}</td>
+                        <td>${item.obs}</td>
+                        <td>${item.rubro}</td>
+                    </tr>
+                `;
+            });
+
+            const solicitudHtml = `
+                <div class="solicitud-impresa">
+                    <div class="header">
+                        <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
+                        <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+                        <div class="solicitud-box"><label>No. SOLICITUD</label><div>${solicitud.numero}</div></div>
+                    </div>
+                    <h3 class="materials-title">MATERIALES</h3>
+                    <table>
+                        <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    <div class="date-section"><strong>${solicitud.fecha}</strong></div>
+                    <div class="signatures">
+                        <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                        <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
+                        <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+                    </div>
+                </div>
+            `;
+            printContainer.innerHTML += solicitudHtml;
+        });
+
+        document.body.classList.add('printing-historial');
+        window.print();
+    });
+
+    // Event listeners generales
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-    document.getElementById('btn-imprimir').addEventListener('click', () => window.print());
-    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-        document.body.classList.add('printing-historial');
+    document.getElementById('btn-imprimir').addEventListener('click', () => {
+        document.body.classList.remove('printing-historial');
         window.print();
     });
     window.addEventListener('afterprint', () => {
@@ -247,7 +299,6 @@
             if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
         }
     });
-    
     document.addEventListener('DOMContentLoaded', () => {
         limpiarFormulario();
         mostrarSolicitudesGuardadas();
