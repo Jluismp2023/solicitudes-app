@@ -39,6 +39,7 @@
         #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
+        .btn-eliminar-fila { background-color: #dc3545; padding: 5px 10px; font-size: 14px; }
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(5) textarea, td:nth-child(6) textarea { text-align: center; }
         #historial h2 { text-align: center; color: #004a99; }
@@ -51,17 +52,11 @@
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, .signatures { display: none; }
+            .tabs, .actions, .history-actions, #historial, .signatures, .btn-eliminar-fila { display: none; }
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
-            
-            /* ***** CAMBIO AQUÍ: Se eliminó el salto de página ***** */
-            .solicitud-impresa { 
-                padding-top: 15px; 
-                margin-bottom: 25px;
-                page-break-inside: avoid; /* Intenta evitar que una solicitud se corte entre páginas */
-            }
+            .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
@@ -80,7 +75,7 @@
             </div>
             <h3 class="materials-title">MATERIALES</h3>
             <table id="tabla-materiales">
-                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
+                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th>DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th><th style="width: 5%;"></th></tr></thead>
                 <tbody></tbody>
             </table>
             <div class="actions">
@@ -142,12 +137,31 @@
         tablaCuerpo.innerHTML = '';
         for (let i = 0; i < 5; i++) agregarFila();
     }
+
+    // ***** CAMBIO AQUÍ: Función para renumerar los ítems de la tabla *****
+    function renumerarItems() {
+        const filas = tablaCuerpo.querySelectorAll('tr');
+        filas.forEach((fila, index) => {
+            fila.querySelector('.item-column').textContent = index + 1;
+        });
+    }
+
+    // ***** CAMBIO AQUÍ: Se añade el botón de eliminar en cada fila *****
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
-        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
+        fila.innerHTML = `
+            <td class="item-column">${itemCount}</td>
+            <td><textarea rows="1">${item.cantidad}</textarea></td>
+            <td><textarea rows="1">${item.unidad}</textarea></td>
+            <td><textarea rows="1">${item.detalle}</textarea></td>
+            <td><textarea rows="1">${item.obs}</textarea></td>
+            <td><textarea rows="1">${item.rubro}</textarea></td>
+            <td><button class="btn-eliminar-fila">🗑️</button></td>
+        `;
         tablaCuerpo.appendChild(fila);
     }
+
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
@@ -225,6 +239,15 @@
             }
         }
     }, true);
+
+    // ***** CAMBIO AQUÍ: Lógica para el botón de eliminar fila *****
+    tablaCuerpo.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-eliminar-fila')) {
+            const filaParaEliminar = e.target.closest('tr');
+            filaParaEliminar.remove();
+            renumerarItems(); // Llama a la función para corregir los números de ítem
+        }
+    });
     
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
@@ -244,13 +267,11 @@
                     </tr>
                 `;
             });
-            
             const headerPrincipalHtml = index === 0 ? `
                 <div class="header">
                     <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
                     <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div>
                 </div>` : '';
-
             const solicitudHtml = `
                 <div class="solicitud-impresa">
                     ${headerPrincipalHtml}
@@ -260,7 +281,7 @@
                         <div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div>
                     </div>
                     <table>
-                        <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
+                        <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead>
                         <tbody>${itemsHtml}</tbody>
                     </table>
                 </div>
