@@ -16,15 +16,17 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px; }
         .header-logo img { width: 200px; height: auto; margin-right: 15px; }
         .header-title { text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99; }
-        .solicitud-box { border: 1px solid black; padding: 5px; }
+        .solicitud-box { border: 1px solid black; padding: 5px; text-align: center; }
         .solicitud-box label { display: block; font-weight: bold; }
         .solicitud-box input { border: none; width: 150px; text-align: center; }
+        /* Estilo para el número de solicitud en la impresión */
+        .solicitud-box-print-content { font-size: 1.1em; padding-top: 5px; }
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
-        .date-section { margin-bottom: 100px; }
+        .date-section { margin-bottom: 20px; } /* Reducido el margen para la impresión */
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
@@ -45,26 +47,23 @@
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
         
-        /* Contenedor oculto para la impresión detallada */
         #print-historial-detallado { display: none; }
 
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial { display: none; }
+            .tabs, .actions, .history-actions, #historial, .signatures { display: none; }
             
-            /* Lógica para imprimir el formulario o el historial detallado */
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
             
-            /* Estilos para cada solicitud impresa en el historial */
             .solicitud-impresa {
-                page-break-before: always; /* Cada solicitud empieza en una nueva página */
+                page-break-before: always;
                 padding-top: 20px;
             }
             .solicitud-impresa:first-child {
-                page-break-before: auto; /* Evita un salto de página antes del primer elemento */
+                page-break-before: auto;
             }
             
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
@@ -124,7 +123,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ***** CAMBIO AQUÍ: Variable para guardar los datos del historial *****
     let solicitudesCargadas = [];
 
     const noSolicitudInput = document.getElementById('no_solicitud');
@@ -182,12 +180,12 @@
     
     function mostrarSolicitudesGuardadas() {
         db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
-            solicitudesCargadas = []; // Limpiamos antes de llenar
+            solicitudesCargadas = [];
             listaSolicitudesUI.innerHTML = '';
             querySnapshot.forEach((doc) => {
                 const solicitud = doc.data();
-                solicitud.id = doc.id; // Añadimos el id al objeto
-                solicitudesCargadas.push(solicitud); // Guardamos la data en nuestra variable
+                solicitud.id = doc.id;
+                solicitudesCargadas.push(solicitud);
                 
                 const li = document.createElement('li');
                 li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
@@ -233,33 +231,36 @@
         }
     }, true);
     
-    // ***** CAMBIO AQUÍ: Lógica para el botón de imprimir historial detallado *****
+    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
-        printContainer.innerHTML = ''; // Limpia el contenedor
+        printContainer.innerHTML = '';
 
-        // Recorremos las solicitudes guardadas y creamos una vista de formulario para cada una
         solicitudesCargadas.forEach(solicitud => {
             let itemsHtml = '';
             solicitud.items.forEach((item, index) => {
                 itemsHtml += `
                     <tr>
                         <td class="item-column">${index + 1}</td>
-                        <td>${item.cantidad}</td>
-                        <td>${item.unidad}</td>
-                        <td>${item.detalle}</td>
-                        <td>${item.obs}</td>
-                        <td>${item.rubro}</td>
+                        <td style="text-align:center;">${item.cantidad}</td>
+                        <td style="text-align:center;">${item.unidad}</td>
+                        <td style="text-align:center;">${item.detalle}</td>
+                        <td style="text-align:center;">${item.obs}</td>
+                        <td style="text-align:center;">${item.rubro}</td>
                     </tr>
                 `;
             });
 
+            // Se elimina la sección de firmas de este bloque
             const solicitudHtml = `
                 <div class="solicitud-impresa">
                     <div class="header">
                         <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
                         <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
-                        <div class="solicitud-box"><label>No. SOLICITUD</label><div>${solicitud.numero}</div></div>
+                        <div class="solicitud-box">
+                            <label>No. SOLICITUD</label>
+                            <div class="solicitud-box-print-content">${solicitud.numero}</div>
+                        </div>
                     </div>
                     <h3 class="materials-title">MATERIALES</h3>
                     <table>
@@ -267,11 +268,6 @@
                         <tbody>${itemsHtml}</tbody>
                     </table>
                     <div class="date-section"><strong>${solicitud.fecha}</strong></div>
-                    <div class="signatures">
-                        <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                        <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                        <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
-                    </div>
                 </div>
             `;
             printContainer.innerHTML += solicitudHtml;
@@ -281,7 +277,6 @@
         window.print();
     });
 
-    // Event listeners generales
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
