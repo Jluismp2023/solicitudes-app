@@ -19,14 +19,17 @@
         .solicitud-box { border: 1px solid black; padding: 5px; text-align: center; }
         .solicitud-box label { display: block; font-weight: bold; }
         .solicitud-box input { border: none; width: 150px; text-align: center; }
-        /* Estilo para el número de solicitud en la impresión */
         .solicitud-box-print-content { font-size: 1.1em; padding-top: 5px; }
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
+        /* Estilo para el contenedor del título de materiales en la impresión */
+        .materials-header-print { display: flex; justify-content: space-between; align-items: center; background-color: #e0e0e0; border: 1px solid #333; }
+        .materials-header-print .title { flex-grow: 1; text-align: center; font-weight: bold; color: #004a99; padding: 8px; }
+        .materials-header-print .solicitud-num { font-weight: bold; padding: 8px; white-space: nowrap; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
-        .date-section { margin-bottom: 20px; } /* Reducido el margen para la impresión */
+        .date-section { margin-bottom: 20px; }
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
@@ -38,34 +41,23 @@
         #btn-limpiar { background-color: #ffc107; color: black; }
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
-        
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(5) textarea, td:nth-child(6) textarea { text-align: center; }
-
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
-        
         #print-historial-detallado { display: none; }
 
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
             .tabs, .actions, .history-actions, #historial, .signatures { display: none; }
-            
             body:not(.printing-historial) #solicitud { display: block; }
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
-            
-            .solicitud-impresa {
-                page-break-before: always;
-                padding-top: 20px;
-            }
-            .solicitud-impresa:first-child {
-                page-break-before: auto;
-            }
-            
+            /* Se elimina el salto de página para que las tablas sean continuas */
+            .solicitud-impresa { padding-top: 20px; margin-bottom: 30px; }
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
@@ -186,7 +178,6 @@
                 const solicitud = doc.data();
                 solicitud.id = doc.id;
                 solicitudesCargadas.push(solicitud);
-                
                 const li = document.createElement('li');
                 li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
                 listaSolicitudesUI.appendChild(li);
@@ -251,23 +242,22 @@
                 `;
             });
 
-            // Se elimina la sección de firmas de este bloque
+            // Se modifica la estructura para la impresión
             const solicitudHtml = `
                 <div class="solicitud-impresa">
                     <div class="header">
                         <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
-                        <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
-                        <div class="solicitud-box">
-                            <label>No. SOLICITUD</label>
-                            <div class="solicitud-box-print-content">${solicitud.numero}</div>
-                        </div>
+                        <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div>
                     </div>
-                    <h3 class="materials-title">MATERIALES</h3>
+                     <div class="date-section"><strong>${solicitud.fecha}</strong></div>
+                    <div class="materials-header-print">
+                        <div class="title">MATERIALES</div>
+                        <div class="solicitud-num">No. SOLICITUD: ${solicitud.numero}</div>
+                    </div>
                     <table>
                         <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
                         <tbody>${itemsHtml}</tbody>
                     </table>
-                    <div class="date-section"><strong>${solicitud.fecha}</strong></div>
                 </div>
             `;
             printContainer.innerHTML += solicitudHtml;
