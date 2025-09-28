@@ -56,17 +56,12 @@
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
             
-            /* ***** CAMBIO AQUÍ: Se añade el salto de página ***** */
+            /* ***** CAMBIO AQUÍ: Se eliminó el salto de página ***** */
             .solicitud-impresa { 
-                padding-top: 20px; 
-                margin-bottom: 30px;
-                page-break-before: always; /* Cada solicitud empieza en una página nueva */
+                padding-top: 15px; 
+                margin-bottom: 25px;
+                page-break-inside: avoid; /* Intenta evitar que una solicitud se corte entre páginas */
             }
-             /* Evita que la PRIMERA solicitud tenga un espacio en blanco arriba */
-            .solicitud-impresa:first-child {
-                page-break-before: auto;
-            }
-
             td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
@@ -231,7 +226,6 @@
         }
     }, true);
     
-    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
         printContainer.innerHTML = '';
@@ -251,7 +245,6 @@
                 `;
             });
             
-            // Solo la primera solicitud (index === 0) mostrará el encabezado principal
             const headerPrincipalHtml = index === 0 ? `
                 <div class="header">
                     <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
