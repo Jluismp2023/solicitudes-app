@@ -53,7 +53,7 @@
         #print-historial-detallado { display: none; }
 
         
-        /* --- 2. NUEVOS ESTILOS CSS PARA LA NOTA --- */
+        /* ESTILOS CSS PARA LA NOTA */
         .note-section {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -74,7 +74,6 @@
             font-size: 1em;
             resize: vertical;
         }
-        /* --- FIN DE NUEVOS ESTILOS --- */
 
 
         @media print {
@@ -88,8 +87,7 @@
             body.printing-historial #print-historial-detallado { display: block; }
             .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
             
-            /* --- 3. CAMBIO CSS DE IMPRESIÓN --- */
-            /* Se añade #nota-input para que se imprima sin bordes, igual que los otros campos */
+            /* Se añade #nota-input para que se imprima sin bordes */
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; 
                 background-color: transparent; 
@@ -129,6 +127,7 @@
                 <label for="nota-input">NOTA:</label>
                 <textarea id="nota-input" rows="3"></textarea>
             </div>
+
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
                 <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
@@ -168,7 +167,6 @@
     const editingSolicitudId = document.getElementById('editing-solicitud-id');
     const btnGuardar = document.getElementById('btn-guardar');
     
-    // --- 4. CAMBIOS EN JAVASCRIPT ---
     // Variable para el nuevo campo de nota
     const notaInput = document.getElementById('nota-input'); 
 
@@ -190,7 +188,6 @@
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         
-        // --- 4. CAMBIOS EN JAVASCRIPT ---
         notaInput.value = ''; // Limpiar el campo de nota
         
         for (let i = 0; i < 5; i++) agregarFila();
@@ -220,7 +217,6 @@
             items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
         
-        // --- 4. CAMBIOS EN JAVASCRIPT ---
         // Se añade el campo 'nota' al objeto que se guarda en Firebase
         const solicitudData = {
             numero: noSolicitudInput.value || 'N/A',
@@ -271,7 +267,6 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
-            // --- 4. CAMBIOS EN JAVASCRIPT ---
             // Cargar la nota. Usamos '|| ""' por si es una solicitud antigua que no tiene nota.
             notaInput.value = solicitudACargar.nota || ""; // <-- AÑADIDO
 
@@ -311,7 +306,11 @@
     });
     
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-        const printContainer = document.getElementById('print-historial-detallADO');
+        
+        // --- AQUÍ ESTÁ LA CORRECCIÓN DEL ERROR ---
+        const printContainer = document.getElementById('print-historial-detallado');
+        // --- FIN DE LA CORRECCIÓN ---
+
         printContainer.innerHTML = '';
         solicitudesCargadas.forEach((solicitud, index) => {
             let itemsHtml = '';
@@ -319,8 +318,14 @@
                 itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
             const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
-            // (Nota: No he añadido la nota a este historial detallado, solo al formulario principal)
-            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
+            
+            // Añadir la nota a la impresión del historial (si existe)
+            let notaHtml = '';
+            if (solicitud.nota) {
+                notaHtml = `<div class"note-section" style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>`;
+            }
+
+            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table>${notaHtml}</div>`;
             printContainer.innerHTML += solicitudHtml;
         });
         document.body.classList.add('printing-historial');
