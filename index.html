@@ -6,64 +6,11 @@
     <title>Solicitud de Materiales</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
-        
-        /* --- ESTILOS DE LOGIN --- */
-        #login-container {
-            padding: 40px; 
-            text-align: center; 
-            max-width: 400px; 
-            margin: 50px auto; 
-            background: #fff; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-            border-radius: 8px;
-        }
-        #login-container img { width: 250px; margin-bottom: 20px; }
-        #login-container input { 
-            width: 90%; 
-            padding: 10px; 
-            margin-bottom: 10px; 
-            font-size: 16px; 
-            border: 1px solid #ccc; 
-            border-radius: 5px; 
-        }
-        #login-container button {
-            padding: 10px 20px; 
-            font-size: 16px; 
-            background-color: #004a99; 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            border-radius: 5px; 
-            width: 95%;
-        }
-        #login-error { color: red; margin-top: 15px; height: 1em; }
-
-        /* --- ESTILOS DE LA APP --- */
-        .app-container { 
-            max-width: 900px; 
-            margin: 20px auto; 
-            background-color: #fff; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-            /* La app estará oculta al inicio */
-            display: none; 
-        }
+        .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .tabs { display: flex; background-color: #004a99; }
         .tab-button { padding: 15px 20px; cursor: pointer; border: none; background-color: #004a99; color: white; font-size: 16px; transition: background-color 0.3s; }
         .tab-button:hover { background-color: #005cbf; }
         .tab-button.active { background-color: #fff; color: #004a99; font-weight: bold; }
-        
-        /* Botón de Salir */
-        #btn-logout {
-            margin-left: auto; /* Empuja el botón a la derecha */
-            padding: 15px 20px; 
-            cursor: pointer; 
-            border: none; 
-            background-color: #dc3545; /* Color rojo */
-            color: white; 
-            font-size: 16px;
-        }
-
-        /* (El resto de tus estilos originales van aquí...) */
         .tab-content { display: none; padding: 20px; border: 2px solid #004a99; border-top: none; }
         .tab-content.active { display: block; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px; }
@@ -101,10 +48,9 @@
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
         #print-historial-detallado { display: none; }
+
         @media print {
             body { margin: 20px; background-color: #fff; }
-            /* Ocultamos el login al imprimir */
-            #login-container { display: none; } 
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
             .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; }
             th:last-child, td:last-child { display: none; }
@@ -118,23 +64,11 @@
     </style>
 </head>
 <body>
-
-    <div id="login-container">
-        <h2>Iniciar Sesión</h2>
-        <img src="IMG-20250724-WA0025.jpg" alt="Logo">
-        <input type="email" id="login-email" placeholder="Correo electrónico">
-        <input type="password" id="login-password" placeholder="Contraseña">
-        <button id="btn-login">Ingresar</button>
-        <p id="login-error"></p>
-    </div>
     <div class="app-container">
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-            
-            <button id="btn-logout">Salir 📴</button>
         </div>
-        
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
             <div class="header">
@@ -171,48 +105,26 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    
     <script>
-    
-    // --- ESTA ES LA SECCIÓN CORREGIDA ---
     const firebaseConfig = {
-      apiKey: "AIzaSyCJP-JexNpnTSIuJFGrBvD6vaUk8zCkMs", // <-- ¡ESTA ES LA CLAVE CORRECTA!
+      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
       authDomain: "solicitud-mat.firebaseapp.com",
       projectId: "solicitud-mat",
       storageBucket: "solicitud-mat.appspot.com",
       messagingSenderId: "562521909209",
       appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
     };
-    // --- FIN DE LA CORRECCIÓN ---
-
     firebase.initializeApp(firebaseConfig);
-    
-    // Servicios de Firebase
     const db = firebase.firestore();
-    const auth = firebase.auth(); // <-- Nuevo servicio de Auth
 
     let solicitudesCargadas = [];
 
-    // Elementos de la APP
     const noSolicitudInput = document.getElementById('no_solicitud');
     const fechaInput = document.getElementById('fecha-input');
     const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
     const listaSolicitudesUI = document.getElementById('lista-solicitudes');
     const editingSolicitudId = document.getElementById('editing-solicitud-id');
     const btnGuardar = document.getElementById('btn-guardar');
-    
-    // Elementos del LOGIN
-    const loginContainer = document.getElementById('login-container');
-    const appContainer = document.querySelector('.app-container');
-    const loginEmail = document.getElementById('login-email');
-    const loginPassword = document.getElementById('login-password');
-    const btnLogin = document.getElementById('btn-login');
-    const btnLogout = document.getElementById('btn-logout');
-    const loginError = document.getElementById('login-error');
-
-
-    // --- FUNCIONES DE LA APP (Tu código original) ---
     
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -232,6 +144,7 @@
         tablaCuerpo.innerHTML = '';
         for (let i = 0; i < 5; i++) agregarFila();
     }
+    
     function renumerarItems() {
         tablaCuerpo.querySelectorAll('tr').forEach((fila, index) => {
             fila.querySelector('.item-column').textContent = index + 1;
@@ -279,6 +192,7 @@
                 .catch((error) => console.error("Error al guardar: ", error));
         }
     }
+    
     function mostrarSolicitudesGuardadas() {
         db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
             solicitudesCargadas = [];
@@ -293,6 +207,7 @@
             });
         });
     }
+
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         if (solicitudACargar) {
@@ -300,6 +215,7 @@
             fechaInput.value = solicitudACargar.fecha;
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
+            
             tablaCuerpo.innerHTML = '';
             solicitudACargar.items.forEach(item => agregarFila(item));
             setTimeout(() => {
@@ -310,12 +226,12 @@
             alert("No se encontró la solicitud.");
         }
     }
+
     function eliminarSolicitud(id) {
         db.collection("solicitudes").doc(id).delete()
             .catch(error => console.error("Error al eliminar: ", error));
     }
     
-    // (Resto de tus listeners y funciones de impresión originales...)
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
             ajustarAlturaTextarea(e.target);
@@ -334,6 +250,8 @@
             renumerarItems();
         }
     });
+    
+    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         const printContainer = document.getElementById('print-historial-detallado');
         printContainer.innerHTML = '';
@@ -349,15 +267,16 @@
         document.body.classList.add('printing-historial');
         window.print();
     });
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('printing-historial');
-    });
+
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
     document.getElementById('btn-imprimir').addEventListener('click', () => {
         document.body.classList.remove('printing-historial');
         window.print();
+    });
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-historial');
     });
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
@@ -367,51 +286,10 @@
         }
     });
     
-    // --- LÓGICA DE AUTENTICACIÓN ---
-
-    // Función de Login
-    btnLogin.addEventListener('click', () => {
-        const email = loginEmail.value;
-        const password = loginPassword.value;
-        loginError.textContent = ''; // Limpiar errores
-
-        auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Login exitoso. El 'onAuthStateChanged' se encargará de mostrar la app.
-            })
-            .catch((error) => {
-                console.error("Error de login:", error.message);
-                loginError.textContent = 'Error: Usuario o contraseña incorrectos.';
-            });
-    });
-
-    // Función de Logout
-    btnLogout.addEventListener('click', () => {
-        auth.signOut().catch((error) => {
-            console.error("Error de logout:", error);
-        });
-    });
-    
-    // "Vigilante" de la sesión:
-    // Esto reemplaza a tu 'DOMContentLoaded'
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            // Usuario está logueado
-            loginContainer.style.display = 'none';
-            appContainer.style.display = 'block';
-            loginEmail.value = ''; // Limpiar campos
-            loginPassword.value = '';
-            loginError.textContent = '';
-            
-            // Ahora que está logueado, inicializamos la app
-            limpiarFormulario();
-            mostrarSolicitudesGuardadas();
-            openTab('solicitud'); 
-        } else {
-            // Usuario no está logueado
-            loginContainer.style.display = 'block';
-            appContainer.style.display = 'none';
-        }
+    document.addEventListener('DOMContentLoaded', () => {
+        limpiarFormulario();
+        mostrarSolicitudesGuardadas();
+        openTab('solicitud'); 
     });
     </script>
 </body>
