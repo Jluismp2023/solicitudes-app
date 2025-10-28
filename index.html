@@ -174,16 +174,18 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
     <script>
-    // --- LÓGICA DE JAVASCRIPT (Paso 4) ---
     
+    // --- ESTA ES LA SECCIÓN CORREGIDA ---
     const firebaseConfig = {
-      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
+      apiKey: "AIzaSyCJP-JexNpnTSIuJFGrBvD6vaUk8zCkMs", // <-- ¡CLAVE CORREGIDA!
       authDomain: "solicitud-mat.firebaseapp.com",
       projectId: "solicitud-mat",
       storageBucket: "solicitud-mat.appspot.com",
       messagingSenderId: "562521909209",
       appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
     };
+    // --- FIN DE LA CORRECCIÓN ---
+
     firebase.initializeApp(firebaseConfig);
     
     // Servicios de Firebase
@@ -365,7 +367,7 @@
         }
     });
     
-    // --- LÓGICA DE AUTENTICACIÓN (Paso 4) ---
+    // --- LÓGICA DE AUTENTICACIÓN ---
 
     // Función de Login
     btnLogin.addEventListener('click', () => {
