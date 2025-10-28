@@ -52,6 +52,31 @@
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
         #print-historial-detallado { display: none; }
 
+        
+        /* --- 2. NUEVOS ESTILOS CSS PARA LA NOTA --- */
+        .note-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .note-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #004a99;
+        }
+        .note-section textarea {
+            width: 100%;
+            box-sizing: border-box; /* Asegura que el padding no desborde */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 1em;
+            resize: vertical;
+        }
+        /* --- FIN DE NUEVOS ESTILOS --- */
+
+
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
@@ -62,7 +87,16 @@
             body.printing-historial #solicitud { display: none; }
             body.printing-historial #print-historial-detallado { display: block; }
             .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
-            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
+            
+            /* --- 3. CAMBIO CSS DE IMPRESIÓN --- */
+            /* Se añade #nota-input para que se imprima sin bordes, igual que los otros campos */
+            td textarea, #no_solicitud, #fecha-input, #nota-input { 
+                border: none; 
+                background-color: transparent; 
+                -webkit-print-color-adjust: exact; 
+                color-adjust: exact; 
+                color: #000; 
+            }
         }
     </style>
 </head>
@@ -89,6 +123,11 @@
                 <button id="btn-guardar">💾 Guardar Solicitud</button>
                 <button id="btn-limpiar">📄 Limpiar Formulario</button>
                 <button id="btn-imprimir">🖨️ Imprimir</button>
+            </div>
+
+            <div class="note-section">
+                <label for="nota-input">NOTA:</label>
+                <textarea id="nota-input" rows="3"></textarea>
             </div>
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
@@ -129,6 +168,11 @@
     const editingSolicitudId = document.getElementById('editing-solicitud-id');
     const btnGuardar = document.getElementById('btn-guardar');
     
+    // --- 4. CAMBIOS EN JAVASCRIPT ---
+    // Variable para el nuevo campo de nota
+    const notaInput = document.getElementById('nota-input'); 
+
+    
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -145,6 +189,10 @@
         btnGuardar.textContent = '💾 Guardar Solicitud';
         establecerFecha();
         tablaCuerpo.innerHTML = '';
+        
+        // --- 4. CAMBIOS EN JAVASCRIPT ---
+        notaInput.value = ''; // Limpiar el campo de nota
+        
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -171,10 +219,14 @@
             const textareas = fila.querySelectorAll('textarea');
             items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
+        
+        // --- 4. CAMBIOS EN JAVASCRIPT ---
+        // Se añade el campo 'nota' al objeto que se guarda en Firebase
         const solicitudData = {
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
             items: items,
+            nota: notaInput.value // <-- AÑADIDO
         };
 
         const id = editingSolicitudId.value;
@@ -219,6 +271,10 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
+            // --- 4. CAMBIOS EN JAVASCRIPT ---
+            // Cargar la nota. Usamos '|| ""' por si es una solicitud antigua que no tiene nota.
+            notaInput.value = solicitudACargar.nota || ""; // <-- AÑADIDO
+
             tablaCuerpo.innerHTML = '';
             solicitudACargar.items.forEach(item => agregarFila(item));
             setTimeout(() => {
@@ -254,9 +310,8 @@
         }
     });
     
-    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-        const printContainer = document.getElementById('print-historial-detallado');
+        const printContainer = document.getElementById('print-historial-detallADO');
         printContainer.innerHTML = '';
         solicitudesCargadas.forEach((solicitud, index) => {
             let itemsHtml = '';
@@ -264,6 +319,7 @@
                 itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
             const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
+            // (Nota: No he añadido la nota a este historial detallado, solo al formulario principal)
             const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
             printContainer.innerHTML += solicitudHtml;
         });
