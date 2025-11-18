@@ -83,10 +83,6 @@
             th:last-child, td:last-child { display: none; }
             body:not(.printing-historial) .signatures { display: flex; }
             body:not(.printing-historial) #solicitud { display: block; }
-            body.printing-historial #solicitud { display: none; }
-            body.printing-historial #print-historial-detallado { display: block; }
-            .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
-            
             /* Se añade #nota-input para que se imprima sin bordes */
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; 
@@ -142,8 +138,6 @@
         </div>
     </div>
 
-    <div id="print-historial-detallado"></div>
-    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
@@ -190,6 +184,7 @@
         
         notaInput.value = ''; // Limpiar el campo de nota
         
+        // Agregar las primeras 5 filas y ajustar su altura inmediatamente
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -198,12 +193,18 @@
             fila.querySelector('.item-column').textContent = index + 1;
         });
     }
+
+    // FUNCIÓN DE AGREGAR FILA MEJORADA
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td><td><button class="btn-eliminar-fila">🗑️</button></td>`;
         tablaCuerpo.appendChild(fila);
+
+        // Ajustar la altura de los textareas recién añadidos de forma inmediata
+        fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
     }
+
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
@@ -214,7 +215,16 @@
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
-            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
+            // Verifica que existan 5 textareas antes de acceder a ellos (para evitar errores si la fila está incompleta)
+            if (textareas.length >= 5) { 
+                items.push({ 
+                    cantidad: textareas[0].value, 
+                    unidad: textareas[1].value, 
+                    detalle: textareas[2].value, 
+                    obs: textareas[3].value, 
+                    rubro: textareas[4].value 
+                });
+            }
         });
         
         // Se añade el campo 'nota' al objeto que se guarda en Firebase
@@ -222,7 +232,7 @@
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
             items: items,
-            nota: notaInput.value // <-- AÑADIDO
+            nota: notaInput.value 
         };
 
         const id = editingSolicitudId.value;
@@ -259,6 +269,7 @@
         });
     }
 
+    // FUNCIÓN CARGAR SOLICITUD MEJORADA (sin setTimeout)
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         if (solicitudACargar) {
@@ -267,14 +278,12 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
-            // Cargar la nota. Usamos '|| ""' por si es una solicitud antigua que no tiene nota.
-            notaInput.value = solicitudACargar.nota || ""; // <-- AÑADIDO
+            notaInput.value = solicitudACargar.nota || ""; // Cargar la nota
 
             tablaCuerpo.innerHTML = '';
-            solicitudACargar.items.forEach(item => agregarFila(item));
-            setTimeout(() => {
-                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
-            }, 0);
+            // Al llamar a agregarFila, la altura se ajusta inmediatamente dentro de esa función
+            solicitudACargar.items.forEach(item => agregarFila(item)); 
+            
             openTab('solicitud');
         } else {
             alert("No se encontró la solicitud.");
@@ -305,43 +314,108 @@
         }
     });
     
+    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL REFRACTORIZADA (Usa ventana temporal)
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
+        let contentHtml = '';
         
-        // --- AQUÍ ESTÁ LA CORRECCIÓN DEL ERROR ---
-        const printContainer = document.getElementById('print-historial-detallado');
-        // --- FIN DE LA CORRECCIÓN ---
-
-        printContainer.innerHTML = '';
-        solicitudesCargadas.forEach((solicitud, index) => {
+        // 1. Generar el HTML para cada solicitud
+        solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
+                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
-            const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
+
+            // Replicar el HTML del encabezado de la solicitud
+            const headerHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="flex-shrink: 0;"><img src="IMG-20250724-WA0025.jpg" alt="Logo" style="width: 200px; height: auto; margin-right: 15px;"></div>
+                    <div style="text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99;">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+                    <div style="border: 1px solid black; padding: 5px; text-align: center; flex-shrink: 0;">
+                        <label style="display: block; font-weight: bold;">No. SOLICITUD</label>
+                        <div style="font-weight: bold; font-size: 1em;">${solicitud.numero}</div>
+                    </div>
+                </div>`;
             
             // Añadir la nota a la impresión del historial (si existe)
             let notaHtml = '';
             if (solicitud.nota) {
-                notaHtml = `<div class"note-section" style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>`;
+                notaHtml = `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>`;
             }
+            
+            // Replicar las firmas
+            const signaturesHtml = `
+                <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
+                    <div style="width: 250px;">
+                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
+                        <strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR
+                    </div>
+                    <div style="width: 250px;">
+                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
+                        <strong>ING. JOSE MACAS P.</strong><br>TECNICO
+                    </div>
+                    <div style="width: 250px;">
+                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
+                        <strong>TCNLG. MARIA LOZANO</strong><br>BODEGA
+                    </div>
+                </div>`;
+                
+            // Fecha para impresión
+            const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
 
-            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table>${notaHtml}</div>`;
-            printContainer.innerHTML += solicitudHtml;
+            const tablaHtml = `
+                <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead>
+                    <tbody>${itemsHtml}</tbody>
+                </table>`;
+
+            // Envolver la solicitud completa para forzar el salto de página si es necesario
+            contentHtml += `<div style="padding: 20px; page-break-after: always; border: 1px solid #ddd; margin-bottom: 20px;">
+                ${headerHtml}
+                ${tablaHtml}
+                ${notaHtml}
+                ${fechaHtml}
+                ${signaturesHtml}
+            </div>`;
         });
-        document.body.classList.add('printing-historial');
-        window.print();
+        
+        // 2. Crear una ventana temporal de impresión
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Historial de Solicitudes</title>');
+        // Incluir CSS básicos para impresión
+        printWindow.document.write(`
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+                th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; font-size: 10pt; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .item-column { font-weight: bold; }
+                img { max-width: 100%; height: auto; }
+                @page { margin: 1cm; }
+                div[style*="page-break-after: always"] { page-break-after: always; }
+                div[style*="page-break-after: always"]:last-child { page-break-after: avoid; } /* Evita salto al final */
+            </style>
+        `);
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<h1>Historial de Solicitudes</h1><hr>${contentHtml}`);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        
+        // 3. Imprimir y cerrar la ventana
+        printWindow.onload = () => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        };
     });
 
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
     document.getElementById('btn-imprimir').addEventListener('click', () => {
-        document.body.classList.remove('printing-historial');
         window.print();
     });
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('printing-historial');
-    });
+
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
