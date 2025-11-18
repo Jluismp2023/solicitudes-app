@@ -279,7 +279,7 @@
             listaRubros = JSON.parse(rubrosGuardados);
         } else {
             listaRubros = obtenerRubrosCompletosDeLaImagen();
-            guardarRubros(false); // Guardar silenciosamente la lista inicial
+            guardarRubros(false); 
         }
         rubrosTextarea.value = listaRubros.join('\n');
     }
@@ -313,7 +313,7 @@
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         
-        notaInput.value = ''; // Limpiar el campo de nota
+        notaInput.value = ''; 
         
         for (let i = 0; i < 5; i++) agregarFila();
     }
@@ -324,7 +324,7 @@
         });
     }
 
-    // FUNCIÓN DE AGREGAR FILA (Usa SELECT para OBS.)
+    // FUNCIÓN DE AGREGAR FILA 
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
@@ -342,7 +342,6 @@
         
         tablaCuerpo.appendChild(fila);
 
-        // Ajustar la altura de los textareas recién añadidos
         fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
     }
 
@@ -353,7 +352,7 @@
         fechaInput.value = fechaFormateada;
     }
     
-    // FUNCIÓN GUARDAR SOLICITUD (Extrae datos del SELECT)
+    // FUNCIÓN GUARDAR SOLICITUD 
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
@@ -365,8 +364,8 @@
                     cantidad: textareas[0].value, 
                     unidad: textareas[1].value, 
                     detalle: textareas[2].value, 
-                    obs: selectObs.value, // Obtener valor del SELECT
-                    rubro: textareas[3].value // Obtener valor del último textarea
+                    obs: selectObs.value, 
+                    rubro: textareas[3].value 
                 });
             }
         });
@@ -455,15 +454,14 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL ACTUALIZADA CON ANCHOS PARA EL TEXTO LARGO
+    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL ACTUALIZADA
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
         
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                // Se agregan estilos para asegurar que el texto se envuelva en la celda de la ventana de impresión
-                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
+                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
 
             const headerHtml = `
@@ -499,7 +497,7 @@
                 
             const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
 
-            // Anchos de columna actualizados para dar más espacio a OBS. (RUBRO)
+            // Anchos de columna actualizados: OBS. (RUBRO) obtiene 40%
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
@@ -507,8 +505,8 @@
                         <th style="width: 5%;">ITEM</th>
                         <th style="width: 10%;">CANTIDAD</th>
                         <th style="width: 10%;">UNIDAD</th>
-                        <th style="width: 25%;">DETALLE</th>
-                        <th style="width: 35%;">OBS. (RUBRO)</th>
+                        <th style="width: 20%;">DETALLE</th>
+                        <th style="width: 40%;">OBS. (RUBRO)</th>
                         <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
                     </tr></thead>
                     <tbody>${itemsHtml}</tbody>
@@ -537,8 +535,7 @@
                 div[style*="page-break-after: always"] { page-break-after: always; }
                 div[style*="page-break-after: always"]:last-child { page-break-after: avoid; }
                 
-                /* Asegurar que el texto largo se ajuste en la columna OBS */
-                td[style*="white-space: normal"] { white-space: normal !important; }
+                td[style*="white-space: normal"] { white-space: normal !important; text-align: left !important; }
             </style>
         `);
         printWindow.document.write('</head><body>');
@@ -560,7 +557,6 @@
         window.print();
     });
 
-    // Event listener para guardar los rubros
     btnGuardarRubros.addEventListener('click', () => guardarRubros());
 
     listaSolicitudesUI.addEventListener('click', (e) => {
@@ -572,7 +568,7 @@
     });
     
     document.addEventListener('DOMContentLoaded', () => {
-        cargarRubros(); // Cargar la base de rubros primero
+        cargarRubros(); 
         limpiarFormulario();
         mostrarSolicitudesGuardadas();
         openTab('solicitud'); 
