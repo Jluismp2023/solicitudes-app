@@ -101,10 +101,9 @@
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
             .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #rubros-data { display: none; }
-            /* Ocultar la columna de acciones (última) en la impresión de la solicitud actual */
+            
             th:last-child, td:last-child { display: none; }
             
-            /* Asegurar que los campos se impriman sin bordes */
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; 
                 background-color: transparent; 
@@ -112,7 +111,8 @@
                 color-adjust: exact; 
                 color: #000; 
             }
-            /* Asegurar que el select se vea como texto en la impresión */
+            
+            /* Asegurar que el select se vea como texto en la impresión y que el texto se envuelva */
             td select.select-rubro {
                 -webkit-appearance: none;
                 -moz-appearance: none;
@@ -121,6 +121,8 @@
                 background-color: transparent;
                 text-align: left;
                 padding: 0;
+                white-space: normal; 
+                word-wrap: break-word; 
             }
         }
     </style>
@@ -168,6 +170,7 @@
             <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
+        
         <div id="rubros-data" class="tab-content">
             <h2>Base de Datos de Rubros</h2>
             <p>Esta es la lista de rubros disponibles para seleccionar en la columna **OBS. (RUBRO)** de la Solicitud. **Escribe un rubro por cada línea**. Recuerda presionar Guardar después de editar.</p>
@@ -321,20 +324,20 @@
         });
     }
 
-    // FUNCIÓN DE AGREGAR FILA MEJORADA (Usa SELECT para OBS.)
+    // FUNCIÓN DE AGREGAR FILA (Usa SELECT para OBS.)
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
         const selectRubrosHTML = crearSelectRubros(item.obs);
 
-        // La columna "OBS." ahora usa el SELECT, y el último campo es "# RUBRO"
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
             <td><textarea rows="1">${item.cantidad}</textarea></td>
             <td><textarea rows="1">${item.unidad}</textarea></td>
             <td><textarea rows="1">${item.detalle}</textarea></td>
-            <td>${selectRubrosHTML}</td> <td><textarea rows="1">${item.rubro}</textarea></td>
+            <td>${selectRubrosHTML}</td> 
+            <td><textarea rows="1">${item.rubro}</textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
         tablaCuerpo.appendChild(fila);
@@ -350,14 +353,13 @@
         fechaInput.value = fechaFormateada;
     }
     
-    // FUNCIÓN GUARDAR SOLICITUD MEJORADA (Extrae datos del SELECT)
+    // FUNCIÓN GUARDAR SOLICITUD (Extrae datos del SELECT)
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
             const selectObs = fila.querySelector('.select-rubro'); 
 
-            // Se necesitan 4 textareas (cantidad, unidad, detalle, rubro) y el select (obs)
             if (textareas.length >= 4 && selectObs) { 
                 items.push({ 
                     cantidad: textareas[0].value, 
@@ -410,7 +412,6 @@
         });
     }
 
-    // FUNCIÓN CARGAR SOLICITUD MEJORADA (sin setTimeout)
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         if (solicitudACargar) {
@@ -419,7 +420,7 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
-            notaInput.value = solicitudACargar.nota || ""; // Cargar la nota
+            notaInput.value = solicitudACargar.nota || ""; 
 
             tablaCuerpo.innerHTML = '';
             solicitudACargar.items.forEach(item => agregarFila(item)); 
@@ -454,15 +455,15 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL REFRACTORIZADA
+    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL ACTUALIZADA CON ANCHOS PARA EL TEXTO LARGO
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
         
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                // Notar que ahora se imprime el campo OBS. y luego # RUBRO
-                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left;">${item.detalle}</td><td style="text-align:left;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
+                // Se agregan estilos para asegurar que el texto se envuelva en la celda de la ventana de impresión
+                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
 
             const headerHtml = `
@@ -498,10 +499,18 @@
                 
             const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
 
+            // Anchos de columna actualizados para dar más espacio a OBS. (RUBRO)
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
-                    <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th style="width: 20%;">OBS. (RUBRO)</th><th style="width: 15%;"># RUBRO (CÓDIGO)</th></tr></thead>
+                    <thead><tr>
+                        <th style="width: 5%;">ITEM</th>
+                        <th style="width: 10%;">CANTIDAD</th>
+                        <th style="width: 10%;">UNIDAD</th>
+                        <th style="width: 25%;">DETALLE</th>
+                        <th style="width: 35%;">OBS. (RUBRO)</th>
+                        <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
+                    </tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>`;
 
@@ -527,6 +536,9 @@
                 @page { margin: 1cm; }
                 div[style*="page-break-after: always"] { page-break-after: always; }
                 div[style*="page-break-after: always"]:last-child { page-break-after: avoid; }
+                
+                /* Asegurar que el texto largo se ajuste en la columna OBS */
+                td[style*="white-space: normal"] { white-space: normal !important; }
             </style>
         `);
         printWindow.document.write('</head><body>');
