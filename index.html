@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitud de Materiales</title>
-    
-    <link rel="icon" type="image/jpeg" href="IMG-20250724-WA0025.jpg">
-
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
         .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -41,89 +38,28 @@
         #btn-agregar { background-color: #28a745; }
         #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
-        #btn-imprimir, #btn-imprimir-historial, #btn-guardar-rubros { background-color: #6c757d; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
         .btn-eliminar-fila { background-color: #dc3545; padding: 5px 10px; font-size: 14px; }
-        
-        /* Estilos específicos para la tabla de materiales */
         td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
-        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(6) textarea { text-align: center; }
-        
-        /* Estilo para el nuevo SELECT de Rubros (Columna OBS.) */
-        td select.select-rubro {
-            width: 100%;
-            box-sizing: border-box; 
-            border: 1px solid #ccc; 
-            padding: 5px;
-            font-family: inherit;
-            font-size: inherit;
-            text-align: left;
-        }
-
+        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(5) textarea, td:nth-child(6) textarea { text-align: center; }
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
-
-        
-        /* ESTILOS CSS PARA LA NOTA */
-        .note-section {
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .note-section label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #004a99;
-        }
-        .note-section textarea {
-            width: 100%;
-            box-sizing: border-box; 
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
-            resize: vertical;
-        }
-
-        /* Estilo para la nueva pestaña de Rubros */
-        #rubros-data textarea {
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
-        }
-
+        #print-historial-detallado { display: none; }
 
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #rubros-data { display: none; }
-            
+            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; }
             th:last-child, td:last-child { display: none; }
-            
-            td textarea, #no_solicitud, #fecha-input, #nota-input { 
-                border: none; 
-                background-color: transparent; 
-                -webkit-print-color-adjust: exact; 
-                color-adjust: exact; 
-                color: #000; 
-            }
-            
-            /* Asegurar que el select se vea como texto en la impresión y que el texto se envuelva */
-            td select.select-rubro {
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                border: none;
-                background-color: transparent;
-                text-align: left;
-                padding: 0;
-                white-space: normal; 
-                word-wrap: break-word; 
-            }
+            body:not(.printing-historial) .signatures { display: flex; }
+            body:not(.printing-historial) #solicitud { display: block; }
+            body.printing-historial #solicitud { display: none; }
+            body.printing-historial #print-historial-detallado { display: block; }
+            .solicitud-impresa { padding-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
+            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
         }
     </style>
 </head>
@@ -132,7 +68,6 @@
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-            <button class="tab-button" onclick="openTab('rubros-data')">Base de Rubros</button>
         </div>
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
@@ -143,7 +78,7 @@
             </div>
             <h3 class="materials-title">MATERIALES</h3>
             <table id="tabla-materiales">
-                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th>DETALLE</th><th>OBS. (RUBRO)</th><th style="width: 15%;"># RUBRO (CÓDIGO)</th><th></th></tr></thead>
+                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th>DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th><th></th></tr></thead>
                 <tbody></tbody>
             </table>
             <div class="actions">
@@ -152,12 +87,6 @@
                 <button id="btn-limpiar">📄 Limpiar Formulario</button>
                 <button id="btn-imprimir">🖨️ Imprimir</button>
             </div>
-
-            <div class="note-section">
-                <label for="nota-input">NOTA:</label>
-                <textarea id="nota-input" rows="3"></textarea>
-            </div>
-
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
                 <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
@@ -170,17 +99,9 @@
             <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
-        
-        <div id="rubros-data" class="tab-content">
-            <h2>Base de Datos de Rubros</h2>
-            <p>Esta es la lista de rubros disponibles para seleccionar en la columna **OBS. (RUBRO)** de la Solicitud. **Escribe un rubro por cada línea**. Recuerda presionar Guardar después de editar.</p>
-            <div style="margin-bottom: 15px;">
-                <label for="rubros-textarea" style="font-weight: bold; color: #004a99;">Editar Lista de Rubros (Uno por línea):</label>
-                <textarea id="rubros-textarea" rows="20" style="width: 100%; border: 1px solid #ccc; padding: 10px; box-sizing: border-box;"></textarea>
-            </div>
-            <button id="btn-guardar-rubros" style="background-color: #28a745;">💾 Guardar Lista de Rubros</button>
-        </div>
     </div>
+
+    <div id="print-historial-detallado"></div>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -204,63 +125,7 @@
     const listaSolicitudesUI = document.getElementById('lista-solicitudes');
     const editingSolicitudId = document.getElementById('editing-solicitud-id');
     const btnGuardar = document.getElementById('btn-guardar');
-    const notaInput = document.getElementById('nota-input'); 
-
-    // NUEVAS VARIABLES PARA MANEJAR RUBROS
-    const rubrosTextarea = document.getElementById('rubros-textarea');
-    const btnGuardarRubros = document.getElementById('btn-guardar-rubros');
-    let listaRubros = [];
-
-    // Función auxiliar para obtener todos los rubros de la imagen como base inicial
-    function obtenerRubrosCompletosDeLaImagen() {
-        return [
-            "ESTRUCTURAL VIAL", "DESALOJO DE MATERIAL DE EXCAVACION", "DESALOJO DEL MATERIAL DE EXCAVACION",
-            "MEJORAMIENTO DE SUBRASANTE DE LA MAQUINA", "SUMINISTRO Y COLOCACION DE MATERIAL DE SUB BASE II (INCLUYE TRANSPORTE)", 
-            "PROV. Y COLOCACION CON BASE GRANULAR, CLASE I (INCLUYE TRANSPORTE)", "IMPRIMACION ASFALTICA RC-250",
-            "PROV. Y COLOCACION DE HORMIGON ASFALTICO MEZCLADO EN CALIENTE E=4cm.", "SEÑALIZACION PINTURA DE TRAFICO e=15cm",
-            "REPARACION DE CUNETAS Y BACAS DE HORMIGON", "REPLANTEO Y NIVELACION", "REPARACION AGUJEROS",
-            "REPARACION DE BADENES EXISTENTES", "RESANTEO DE ZANJA A MANO", "LIMPIEZA Y DESALOJO MANUAL CON MATERIAL DE EXCAVACION",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE SITIO", "PROV. Y COLOCACION DE HORMIGON SIMPLE F'C=210 Kg/cm2 CON CUNETA DE HORMIGON...",
-            "DEMOLICION DE ACERAS", "DEMOLICION DE MUROS", "DEMOLICION DE ACERAS, SOPORTALES Y BORDILLOS",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE EXCAVACION", "EXTRACCION (INCLUYE TRANSPORTE) DE MATERIAL IMP. HORMIGON SIMPLE F'C=210Kg/cm2",
-            "PROV. Y COLOCACION DE HORMIGON SIMPLE F'C=210Kg/cm2 CON CUNETA DE HORMIGON...",
-            "REPLANTEO Y NIVELACION", "PROV. Y COLOCACION DE CONFINAMIENTO DE H.S. E=8cm.", 
-            "PLANTACION BAJA (margaritas blancas azules y similares).", "AGUA PARA CONTROL DE POLVO", "SUM. E INSTALACION DE PASADERO DE BURBUJAS",
-            "SEÑALIZACION TRAFICO - PINTURA FLECHAS Y SIMBOLOS", "SEÑALIZACION VERT. H=1.20M, CINTA REFLECTIVA, BASE DE HORMIGON",
-            "ARBORIZACION ARBUSTOS (H=0.60M X H=1.80M)", "ARBORIZACION ARBUSTOS",
-            "ARBORIZACION CON ESPECIES NATIVAS (H=1.50-2.0M)", "SUM. LOS AMBIENTADORES REFINERIA",
-            "ARBORIZACION Y AMBIENTACION (H=0.60M X 0.60M)", "SUM. DEL SOMBREADOR Portátil 7x6m del Puesto",
-            "SISTEMA ELÉCTRICO", "INST. DE MEDIDOR CENTRO DE TRANSFORMACIÓN", "TRANSFORMADOR DE Tipo Pad mounted 25kVA 13.2kV",
-            "INSTALACION DE MEDIDOR DE ENERGIA", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 4L", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 6L",
-            "PROV. DE CABLE DE Cobre encauchetado 2x10AWG", "CABLE N° 4 AWG-THW (600V)", "CABLE Nº 95.2 MM2 O 15KV",
-            "CABLE DE COBRE TRIPLEX DE 6AWG CON NEUTRO CORRUGADO EXT", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 2L",
-            "HPD LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "PROV. Y COLOCACIÓN DE POSTES DE HORMIGÓN DE 13 M.", 
-            "HPD PORTA LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "CABLE DE COBRE MONOPOLAR 1/0 AWG", "TUBERÍA Naranja 3/4mm Tipo INC", "CABLE DE COBRE MONOPOLAR 1/0 AWG",
-            "TUBERÍA NARANJA 38MM TIPO INC", "CABLE DE COBRE MONOPOLAR 1/0 AWG", 
-            "CABLE DE COBRE MONOPOLAR 1/0 AWG", "TUBERÍA NARANJA 38MM TIPO INC", 
-            "HPD LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "SISTEMA DE ALCANTARILLADO SANITARIO", "CAJAS DE REVISIÓN", "EXCAVACION A MAQUINA",
-            "RELLENO DE ARENA", "COLCHON DE ARENA", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=220mm",
-            "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=250mm", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=300mm",
-            "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=350mm", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=400mm",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE EXCAVACION", "PROV. Y COLOCACION DE H. SIMPLE T=210kg/cm2, (B=100 x A=40 cm)",
-            "SUMINISTRO Y COLOCACIÓN DE CÁMARA", "DEMOLICION DE CAJAS DE REVISION", "CAJAS DE REVISIÓN DE HORMIGÓN (80 x 80 x 130cm)",
-            "CAJAS DE REVISIÓN DE HORMIGÓN", "RECONSTRUCCIÓN DE CAJAS EXISTENTES (SUBIDA Y BAJADA) TAPA DE HF...",
-            "SISTEMA DE AGUA POTABLE", "SUM. E INST. DE BIODIGESTOR AUTOLIMPIABLE CAPACIDAD 300 LT.", 
-            "SUM. E INST. DE BIODIGESTOR AUTOLIMPIABLE CAPACIDAD 500 LT.",
-            "CAJAS DE REVISIÓN", "EXCAVACION A MAQUINA", "RELLENO DE ARENA",
-            "COLCHON DE ARENA", "SUM. E INST. TUBERIA DE 63MM UZ 0.8MPa (INCLUYE INCLINACION DE 63mm)",
-            "ACOMETIDA DOMICILIARIA (INCL COLLARIN DE 63mm)", "SUM. E INST. DE VALVULA DE 63mm", 
-            "SUM. E INST. DE VALVULA DE 50mm", 
-            "SUM. E INST. DE TUBERIA PVC DE 63mm UZ", "SUM. E INST. DE TUBERIA PVC DE 50mm", 
-            "HIDRANTE HF 4PLG (SUM E INST)", "PROV. Y COLOCACION DE H. SIMPLE e= 0.10 a 0.15m",
-            "CAPA DE RODADURA HORMIGON ASFALTICO MEZCLADO EN CALIENTE E=4cm",
-            "HORMIGON SIMPLE F'=210kg/cm2, tipo encofrado y desencofrado."
-        ];
-    }
-
+    
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -271,50 +136,12 @@
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
-    
-    // FUNCIONES DE GESTIÓN DE RUBROS
-    function cargarRubros() {
-        const rubrosGuardados = localStorage.getItem('listaRubros');
-        if (rubrosGuardados) {
-            listaRubros = JSON.parse(rubrosGuardados);
-        } else {
-            listaRubros = obtenerRubrosCompletosDeLaImagen();
-            guardarRubros(false); 
-        }
-        rubrosTextarea.value = listaRubros.join('\n');
-    }
-
-    function guardarRubros(showAlert = true) {
-        listaRubros = rubrosTextarea.value
-            .split('\n')
-            .map(rubro => rubro.trim())
-            .filter(rubro => rubro.length > 0);
-        
-        localStorage.setItem('listaRubros', JSON.stringify(listaRubros));
-        if (showAlert) {
-            alert('Lista de Rubros actualizada y guardada.');
-        }
-    }
-
-    function crearSelectRubros(seleccionActual = '') {
-        let options = `<option value="">--- Seleccionar Rubro ---</option>`;
-        listaRubros.forEach(rubro => {
-            const selected = rubro === seleccionActual ? 'selected' : '';
-            options += `<option value="${rubro}" ${selected}>${rubro}</option>`;
-        });
-        return `<select class="select-rubro">${options}</select>`;
-    }
-    // FIN FUNCIONES DE GESTIÓN DE RUBROS
-
     function limpiarFormulario() {
         noSolicitudInput.value = '';
         editingSolicitudId.value = '';
         btnGuardar.textContent = '💾 Guardar Solicitud';
         establecerFecha();
         tablaCuerpo.innerHTML = '';
-        
-        notaInput.value = ''; 
-        
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -323,58 +150,28 @@
             fila.querySelector('.item-column').textContent = index + 1;
         });
     }
-
-    // FUNCIÓN DE AGREGAR FILA 
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
-        
-        const selectRubrosHTML = crearSelectRubros(item.obs);
-
-        fila.innerHTML = `
-            <td class="item-column">${itemCount}</td>
-            <td><textarea rows="1">${item.cantidad}</textarea></td>
-            <td><textarea rows="1">${item.unidad}</textarea></td>
-            <td><textarea rows="1">${item.detalle}</textarea></td>
-            <td>${selectRubrosHTML}</td> 
-            <td><textarea rows="1">${item.rubro}</textarea></td>
-            <td><button class="btn-eliminar-fila">🗑️</button></td>`;
-        
+        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td><td><button class="btn-eliminar-fila">🗑️</button></td>`;
         tablaCuerpo.appendChild(fila);
-
-        fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
     }
-
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
         const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
         fechaInput.value = fechaFormateada;
     }
-    
-    // FUNCIÓN GUARDAR SOLICITUD 
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
-            const selectObs = fila.querySelector('.select-rubro'); 
-
-            if (textareas.length >= 4 && selectObs) { 
-                items.push({ 
-                    cantidad: textareas[0].value, 
-                    unidad: textareas[1].value, 
-                    detalle: textareas[2].value, 
-                    obs: selectObs.value, 
-                    rubro: textareas[3].value 
-                });
-            }
+            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
         });
-        
         const solicitudData = {
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
             items: items,
-            nota: notaInput.value 
         };
 
         const id = editingSolicitudId.value;
@@ -419,11 +216,11 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
-            notaInput.value = solicitudACargar.nota || ""; 
-
             tablaCuerpo.innerHTML = '';
-            solicitudACargar.items.forEach(item => agregarFila(item)); 
-            
+            solicitudACargar.items.forEach(item => agregarFila(item));
+            setTimeout(() => {
+                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
+            }, 0);
             openTab('solicitud');
         } else {
             alert("No se encontró la solicitud.");
@@ -454,111 +251,33 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL ACTUALIZADA
+    // ***** CAMBIO AQUÍ: Lógica de impresión de historial actualizada *****
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-        let contentHtml = '';
-        
-        solicitudesCargadas.forEach((solicitud) => {
+        const printContainer = document.getElementById('print-historial-detallado');
+        printContainer.innerHTML = '';
+        solicitudesCargadas.forEach((solicitud, index) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
+                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:center;">${item.detalle}</td><td style="text-align:center;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
-
-            const headerHtml = `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px;">
-                    <div style="flex-shrink: 0;"><img src="IMG-20250724-WA0025.jpg" alt="Logo" style="width: 200px; height: auto; margin-right: 15px;"></div>
-                    <div style="text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99;">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
-                    <div style="border: 1px solid black; padding: 5px; text-align: center; flex-shrink: 0;">
-                        <label style="display: block; font-weight: bold;">No. SOLICITUD</label>
-                        <div style="font-weight: bold; font-size: 1em;">${solicitud.numero}</div>
-                    </div>
-                </div>`;
-            
-            let notaHtml = '';
-            if (solicitud.nota) {
-                notaHtml = `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>`;
-            }
-            
-            const signaturesHtml = `
-                <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR
-                    </div>
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>ING. JOSE MACAS P.</strong><br>TECNICO
-                    </div>
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>TCNLG. MARIA LOZANO</strong><br>BODEGA
-                    </div>
-                </div>`;
-                
-            const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
-
-            // Anchos de columna actualizados: OBS. (RUBRO) obtiene 40%
-            const tablaHtml = `
-                <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
-                    <thead><tr>
-                        <th style="width: 5%;">ITEM</th>
-                        <th style="width: 10%;">CANTIDAD</th>
-                        <th style="width: 10%;">UNIDAD</th>
-                        <th style="width: 20%;">DETALLE</th>
-                        <th style="width: 40%;">OBS. (RUBRO)</th>
-                        <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
-                    </tr></thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>`;
-
-            contentHtml += `<div style="padding: 20px; page-break-after: always; border: 1px solid #ddd; margin-bottom: 20px;">
-                ${headerHtml}
-                ${tablaHtml}
-                ${notaHtml}
-                ${fechaHtml}
-                ${signaturesHtml}
-            </div>`;
+            const headerPrincipalHtml = index === 0 ? `<div class="header"><div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div><div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS</div></div>` : '';
+            const solicitudHtml = `<div class="solicitud-impresa">${headerPrincipalHtml}<div class="materials-header-print"><div class="title">MATERIALES</div><div class="solicitud-num">No. ${solicitud.numero} - ${solicitud.fecha}</div></div><table><thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th>OBS.</th><th style="width: 15%;"># RUBRO</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>`;
+            printContainer.innerHTML += solicitudHtml;
         });
-        
-        const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow.document.write('<html><head><title>Historial de Solicitudes</title>');
-        printWindow.document.write(`
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-                th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; font-size: 10pt; }
-                th { background-color: #f2f2f2; font-weight: bold; }
-                .item-column { font-weight: bold; }
-                img { max-width: 100%; height: auto; }
-                @page { margin: 1cm; }
-                div[style*="page-break-after: always"] { page-break-after: always; }
-                div[style*="page-break-after: always"]:last-child { page-break-after: avoid; }
-                
-                td[style*="white-space: normal"] { white-space: normal !important; text-align: left !important; }
-            </style>
-        `);
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(`<h1>Historial de Solicitudes</h1><hr>${contentHtml}`);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        
-        printWindow.onload = () => {
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        };
+        document.body.classList.add('printing-historial');
+        window.print();
     });
 
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
     document.getElementById('btn-imprimir').addEventListener('click', () => {
+        document.body.classList.remove('printing-historial');
         window.print();
     });
-
-    btnGuardarRubros.addEventListener('click', () => guardarRubros());
-
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-historial');
+    });
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
@@ -568,7 +287,6 @@
     });
     
     document.addEventListener('DOMContentLoaded', () => {
-        cargarRubros(); 
         limpiarFormulario();
         mostrarSolicitudesGuardadas();
         openTab('solicitud'); 
