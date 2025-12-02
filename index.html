@@ -175,41 +175,34 @@
         });
     }
 
-    // --- FUNCIÓN CORREGIDA Y ROBUSTA PARA AGREGAR FILAS ---
+    // --- FUNCIÓN CORREGIDA DEFINITIVAMENTE ---
     function agregarFila(item = null) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
-        // Creamos la estructura HTML con casillas vacías
+        // 1. Preparamos los datos ANTES de crear el HTML
+        // Usamos || '' para asegurarnos que nunca sea undefined
+        const cant = (item && item.cantidad) ? item.cantidad : '';
+        const uni = (item && item.unidad) ? item.unidad : '';
+        const det = (item && item.detalle) ? item.detalle : '';
+        const obs = (item && item.obs) ? item.obs : '';
+        const rub = (item && item.rubro) ? item.rubro : '';
+
+        // 2. Insertamos los valores DIRECTAMENTE en el HTML
+        // Esto garantiza que el valor exista cuando el navegador dibuje la tabla
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
-            <td><textarea rows="1"></textarea></td>
-            <td><textarea rows="1"></textarea></td>
-            <td><textarea rows="1"></textarea></td>
-            <td><textarea rows="1"></textarea></td>
-            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1">${cant}</textarea></td>
+            <td><textarea rows="1">${uni}</textarea></td>
+            <td><textarea rows="1">${det}</textarea></td>
+            <td><textarea rows="1">${obs}</textarea></td>
+            <td><textarea rows="1">${rub}</textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
-        // 1. Agregamos la fila al DOM primero
         tablaCuerpo.appendChild(fila);
 
-        // 2. Seleccionamos los textareas recién creados
-        const textareas = fila.querySelectorAll('textarea');
-        
-        // 3. Asignamos los valores directamente a la propiedad .value
-        // Esto evita el error de renderizado que dejaba las casillas en blanco
-        if (item) {
-            textareas[0].value = item.cantidad || '';
-            textareas[1].value = item.unidad || '';
-            textareas[2].value = item.detalle || '';
-            textareas[3].value = item.obs || '';
-            textareas[4].value = item.rubro || '';
-        } else {
-            textareas.forEach(t => t.value = '');
-        }
-
-        // Ajustamos la altura de cada textarea
-        textareas.forEach(ajustarAlturaTextarea); 
+        // Ajustamos la altura
+        fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
     }
 
     function establecerFecha() {
@@ -224,7 +217,7 @@
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
             if (textareas.length >= 5) {
-                // Guardamos si hay Cantidad O Detalle
+                // Guardamos si hay Cantidad O Detalle escrito
                 if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
                     items.push({ 
                         cantidad: textareas[0].value, 
@@ -280,6 +273,7 @@
     }
 
     function cargarSolicitud(id) {
+        // Encontramos la solicitud en la memoria
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         
         if (solicitudACargar) {
@@ -298,7 +292,7 @@
                     agregarFila(item);
                 });
             } else {
-                // Si la solicitud estaba vacía, mostramos filas por defecto
+                // Si la solicitud estaba vacía, mostramos filas vacías
                 for (let i = 0; i < 5; i++) agregarFila();
             }
             
