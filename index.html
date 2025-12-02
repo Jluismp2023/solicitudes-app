@@ -25,13 +25,25 @@
         
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; } /* table-layout fixed ayuda a mantener anchos */
+        th, td { border: 1px solid #333; padding: 5px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
         
         /* Estilos de inputs en tabla */
-        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
+        td textarea { 
+            width: 100%; 
+            border: none; 
+            padding: 5px; 
+            box-sizing: border-box; 
+            text-align: left; 
+            resize: none; 
+            overflow: hidden; /* Oculta barras de desplazamiento */
+            font-family: inherit; 
+            font-size: 14px; 
+            line-height: 1.4; 
+            min-height: 30px; /* Altura mínima para que no se vean colapsados */
+        }
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
         
         .date-section { margin-bottom: 100px; }
@@ -68,6 +80,7 @@
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; background-color: transparent; 
                 -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; 
+                resize: none; height: auto;
             }
         }
     </style>
@@ -151,10 +164,13 @@
         document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
     }
 
+    // --- FUNCIÓN MEJORADA PARA AJUSTAR ALTURA ---
     function ajustarAlturaTextarea(textarea) {
         if(textarea){
+            // Primero ponemos la altura en 'auto' para que calcule el scrollHeight real
             textarea.style.height = 'auto';
-            textarea.style.height = `${textarea.scrollHeight}px`;
+            // Luego asignamos la altura del contenido + 2px para evitar scrollbars
+            textarea.style.height = (textarea.scrollHeight + 2) + 'px';
         }
     }
     
@@ -165,7 +181,6 @@
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         notaInput.value = ''; 
-        // Agrega 5 filas vacías por defecto
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -175,16 +190,11 @@
         });
     }
 
-    // --- FUNCIÓN CLAVE: RECUPERAR DATOS CON MAYÚSCULAS O MINÚSCULAS ---
     function obtenerValorSeguro(obj, key) {
         if (!obj) return '';
-        // 1. Busca coincidencia exacta (ej: 'cantidad')
         if (obj[key] !== undefined) return obj[key];
-        // 2. Busca en MAYÚSCULAS (ej: 'CANTIDAD') - Esto arregla las solicitudes viejas
         if (obj[key.toUpperCase()] !== undefined) return obj[key.toUpperCase()];
-        // 3. Busca en minúsculas por si acaso
         if (obj[key.toLowerCase()] !== undefined) return obj[key.toLowerCase()];
-        
         return '';
     }
 
@@ -192,7 +202,6 @@
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
-        // Creamos la fila vacía primero en el DOM
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
             <td><textarea rows="1"></textarea></td>
@@ -204,20 +213,23 @@
         
         tablaCuerpo.appendChild(fila);
 
-        // Ahora llenamos los datos usando la función segura
         const textareas = fila.querySelectorAll('textarea');
         
         if (item) {
             textareas[0].value = obtenerValorSeguro(item, 'cantidad');
             textareas[1].value = obtenerValorSeguro(item, 'unidad');
             textareas[2].value = obtenerValorSeguro(item, 'detalle');
-            textareas[3].value = obtenerValorSeguro(item, 'obs'); // Verifica si antes se llamaba 'rubro' o 'obs'
+            textareas[3].value = obtenerValorSeguro(item, 'obs');
             textareas[4].value = obtenerValorSeguro(item, 'rubro');
         } else {
             textareas.forEach(t => t.value = '');
         }
 
-        textareas.forEach(ajustarAlturaTextarea); 
+        // --- CORRECCIÓN FINAL: RETRASO PARA EL AJUSTE DE ALTURA ---
+        // Esto le da tiempo al navegador para "pintar" el texto antes de medir la altura
+        setTimeout(() => {
+            textareas.forEach(ajustarAlturaTextarea);
+        }, 50); 
     }
 
     function establecerFecha() {
@@ -233,7 +245,6 @@
             const textareas = fila.querySelectorAll('textarea');
             if (textareas.length >= 5) {
                 if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
-                    // Guardamos todo en minúsculas para mantener orden a futuro
                     items.push({ 
                         cantidad: textareas[0].value, 
                         unidad: textareas[1].value, 
