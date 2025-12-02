@@ -153,7 +153,9 @@
       messagingSenderId: "562521909209",
       appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     let solicitudesCargadas = [];
@@ -185,6 +187,7 @@
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         notaInput.value = ''; 
+        // Agrega 5 filas vacías por defecto
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -194,23 +197,40 @@
         });
     }
 
-    // FUNCIÓN DE AGREGAR FILA (Ahora con Textareas puros)
-    function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
+    // --- FUNCIÓN CORREGIDA PARA CARGAR DATOS SIN ERRORES ---
+    function agregarFila(item = {}) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
+        // Obtenemos los valores de forma segura
+        const cantidad = item.cantidad || '';
+        const unidad = item.unidad || '';
+        const detalle = item.detalle || '';
+        const obs = item.obs || '';
+        const rubro = item.rubro || '';
+
+        // Creamos la estructura HTML SIN los valores dentro para evitar errores de renderizado
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
-            <td><textarea rows="1">${item.cantidad}</textarea></td>
-            <td><textarea rows="1">${item.unidad}</textarea></td>
-            <td><textarea rows="1">${item.detalle}</textarea></td>
-            <td><textarea rows="1">${item.obs}</textarea></td>
-            <td><textarea rows="1">${item.rubro}</textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
+        // Asignamos los valores directamente a las propiedades .value del DOM
+        const textareas = fila.querySelectorAll('textarea');
+        textareas[0].value = cantidad;
+        textareas[1].value = unidad;
+        textareas[2].value = detalle;
+        textareas[3].value = obs;
+        textareas[4].value = rubro;
+
         tablaCuerpo.appendChild(fila);
 
-        fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
+        // Ajustamos la altura para que se vea todo el texto si es largo
+        textareas.forEach(ajustarAlturaTextarea); 
     }
 
     function establecerFecha() {
@@ -225,15 +245,18 @@
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
-            // Indices: 0=Cantidad, 1=Unidad, 2=Detalle, 3=Obs(Rubro), 4=Codigo Rubro
-            if (textareas.length >= 5) { 
-                items.push({ 
-                    cantidad: textareas[0].value, 
-                    unidad: textareas[1].value, 
-                    detalle: textareas[2].value, 
-                    obs: textareas[3].value, 
-                    rubro: textareas[4].value 
-                });
+            // Verificamos que al menos uno de los campos tenga datos para no guardar filas vacías innecesarias
+            if (textareas.length >= 5) {
+                // Solo guardamos si hay algo escrito en Detalle o Cantidad
+                if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
+                    items.push({ 
+                        cantidad: textareas[0].value, 
+                        unidad: textareas[1].value, 
+                        detalle: textareas[2].value, 
+                        obs: textareas[3].value, 
+                        rubro: textareas[4].value 
+                    });
+                }
             }
         });
         
@@ -281,15 +304,23 @@
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         if (solicitudACargar) {
-            noSolicitudInput.value = solicitudACargar.numero;
-            fechaInput.value = solicitudACargar.fecha;
+            noSolicitudInput.value = solicitudACargar.numero || '';
+            fechaInput.value = solicitudACargar.fecha || '';
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
             notaInput.value = solicitudACargar.nota || ""; 
 
+            // Limpiamos la tabla visualmente
             tablaCuerpo.innerHTML = '';
-            solicitudACargar.items.forEach(item => agregarFila(item)); 
+            
+            // Si la solicitud tiene items, los agregamos uno por uno
+            if (solicitudACargar.items && solicitudACargar.items.length > 0) {
+                solicitudACargar.items.forEach(item => agregarFila(item));
+            } else {
+                // Si por error se guardó sin items, mostramos filas vacías
+                for (let i = 0; i < 5; i++) agregarFila();
+            }
             
             openTab('solicitud');
         } else {
@@ -307,14 +338,18 @@
             ajustarAlturaTextarea(e.target);
         }
     });
+    
+    // Formatear a 2 decimales solo la columna cantidad (index 1)
     tablaCuerpo.addEventListener('blur', (e) => {
-        // Formatear cantidad a 2 decimales si es número
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
-            const valor = parseFloat(textarea.value);
-            if (!isNaN(valor)) textarea.value = valor.toFixed(2);
+            if(textarea.value.trim() !== "") {
+                const valor = parseFloat(textarea.value);
+                if (!isNaN(valor)) textarea.value = valor.toFixed(2);
+            }
         }
     }, true);
+
     tablaCuerpo.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-eliminar-fila')) {
             e.target.closest('tr').remove();
@@ -328,8 +363,18 @@
         
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
-            solicitud.items.forEach((item, itemIndex) => {
-                itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
+            // Aseguramos que existan items antes de iterar
+            const items = solicitud.items || [];
+            
+            items.forEach((item, itemIndex) => {
+                itemsHtml += `<tr>
+                    <td class="item-column">${itemIndex + 1}</td>
+                    <td style="text-align:center;">${item.cantidad || ''}</td>
+                    <td style="text-align:center;">${item.unidad || ''}</td>
+                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle || ''}</td>
+                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs || ''}</td>
+                    <td style="text-align:center;">${item.rubro || ''}</td>
+                </tr>`;
             });
 
             const headerHtml = `
@@ -338,7 +383,7 @@
                     <div style="text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99;">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
                     <div style="border: 1px solid black; padding: 5px; text-align: center; flex-shrink: 0;">
                         <label style="display: block; font-weight: bold;">No. SOLICITUD</label>
-                        <div style="font-weight: bold; font-size: 1em;">${solicitud.numero}</div>
+                        <div style="font-weight: bold; font-size: 1em;">${solicitud.numero || 'N/A'}</div>
                     </div>
                 </div>`;
             
@@ -363,7 +408,7 @@
                     </div>
                 </div>`;
                 
-            const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
+            const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha || ''}</div>`;
 
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
