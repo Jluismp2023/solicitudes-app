@@ -12,6 +12,26 @@
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
         .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         
+        /* --- ELIMINAR FLECHAS DE AJUSTE (SPIN BUTTONS) EN TEXTAREAS DE LA TABLA --- */
+        /* Esta sección asegura que no aparezcan flechas en los campos de la tabla */
+        td textarea {
+            /* Ocultar flechas en Webkit (Chrome, Safari, etc.) */
+            -webkit-appearance: none;
+            -moz-appearance: none; /* Ocultar flechas en Firefox */
+            appearance: none;
+            margin: 0; /* Asegurar que no haya margen extra por los botones */
+        }
+        td textarea::-webkit-inner-spin-button,
+        td textarea::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Para Firefox */
+        td textarea[type=number] {
+            -moz-appearance: textfield;
+        }
+
+
         /* --- TABS --- */
         .tabs { display: flex; background-color: #004a99; }
         .tab-button { padding: 15px 20px; cursor: pointer; border: none; background-color: #004a99; color: white; font-size: 16px; transition: background-color 0.3s; }
@@ -35,34 +55,24 @@
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
         
-        /* MEJORA: Estilos para el crecimiento del textarea */
+        /* Estilos para el crecimiento del textarea */
         td textarea { 
             width: 100%; 
-            border: none; 
+            /* Se ha eliminado 'border: none;' para asegurar la visualización limpia al cargar, pero se mantendrá aquí para la edición */
+            border: none;
             padding: 5px; 
             box-sizing: border-box; 
             text-align: left; 
             resize: none; 
-            overflow-y: auto; /* Permite scroll si excede el max-height */
-            min-height: 1.4em; /* Altura mínima de una línea */
-            max-height: 100px; /* Limita el crecimiento en modo edición */
+            overflow-y: auto; 
+            min-height: 1.4em; 
+            max-height: 100px; 
             font-family: inherit; 
             font-size: inherit; 
             line-height: 1.4; 
         }
         /* Ajuste de alineación para columnas específicas */
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
-
-        /* Estilo para el SELECT de Rubros */
-        td select.select-rubro {
-            width: 100%;
-            box-sizing: border-box; 
-            border: 1px solid #ccc; 
-            padding: 5px;
-            font-family: inherit;
-            font-size: inherit;
-            text-align: left;
-        }
 
         /* --- NOTA, FECHA Y FIRMAS --- */
         .note-section { margin-top: 20px; margin-bottom: 20px; }
@@ -77,6 +87,11 @@
             font-size: 1em;
             resize: vertical;
         }
+        /* Aumentar el margen después de la sección de fecha (DOBLE) */
+        .date-section { 
+            margin-bottom: 200px; 
+            margin-top: 20px;
+        }
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
@@ -88,23 +103,22 @@
         #btn-agregar { background-color: #28a745; }
         #btn-guardar { background-color: #007bff; }
         #btn-limpiar { background-color: #ffc107; color: black; }
-        #btn-imprimir, #btn-imprimir-historial, #btn-guardar-rubros { background-color: #6c757d; }
+        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
         .btn-eliminar-fila { background-color: #dc3545; padding: 5px 10px; font-size: 14px; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
 
-        /* --- HISTORIAL Y RUBROS --- */
-        #historial h2, #rubros-data h2 { text-align: center; color: #004a99; }
+        /* --- HISTORIAL --- */
+        #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        #rubros-data textarea { border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; font-size: 1em; }
 
 
         /* --- ESTILOS DE IMPRESIÓN (@media print) --- */
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #rubros-data { display: none; }
+            .tabs, .actions, .history-actions, #historial { display: none; }
             
             /* Ocultar la columna del botón de eliminar */
             th:last-child, td:last-child { display: none; }
@@ -115,31 +129,17 @@
                 -webkit-print-color-adjust: exact; 
                 color-adjust: exact; 
                 color: #000; 
-                overflow: visible !important; /* IMPORTANTE: Mostrar todo el contenido */
+                overflow: visible !important; 
                 max-height: none !important;
             }
             
-            /* Asegurar que el select se vea como texto en la impresión */
-            td select.select-rubro {
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                border: none;
-                background-color: transparent;
-                text-align: left;
-                padding: 0;
-                white-space: normal; 
-                word-wrap: break-word; 
-                font-weight: normal; /* Asegurar que no sea bold */
-            }
-
-            /* Aplicar anchos de columna fijos para la impresión de la solicitud individual */
+            /* Aplicar anchos de columna fijos para la impresión (Ajustados para 6 columnas) */
             #tabla-materiales thead th:nth-child(1), #tabla-materiales tbody td:nth-child(1) { width: 5%; } /* ITEM */
-            #tabla-materiales thead th:nth-child(2), #tabla-materiales tbody td:nth-child(2) { width: 8%; } /* CANTIDAD */
-            #tabla-materiales thead th:nth-child(3), #tabla-materiales tbody td:nth-child(3) { width: 8%; } /* UNIDAD */
+            #tabla-materiales thead th:nth-child(2), #tabla-materiales tbody td:nth-child(2) { width: 10%; } /* CANTIDAD */
+            #tabla-materiales thead th:nth-child(3), #tabla-materiales tbody td:nth-child(3) { width: 10%; } /* UNIDAD */
             #tabla-materiales thead th:nth-child(4), #tabla-materiales tbody td:nth-child(4) { width: 35%; text-align: left; } /* DETALLE */
-            #tabla-materiales thead th:nth-child(5), #tabla-materiales tbody td:nth-child(5) { width: 30%; text-align: left; } /* OBS. (RUBRO) */
-            #tabla-materiales thead th:nth-child(6), #tabla-materiales tbody td:nth-child(6) { width: 14%; } /* # RUBRO (CÓDIGO) */
+            #tabla-materiales thead th:nth-child(5), #tabla-materiales tbody td:nth-child(5) { width: 25%; text-align: left; } /* OBS. (RUBRO) */
+            #tabla-materiales thead th:nth-child(6), #tabla-materiales tbody td:nth-child(6) { width: 15%; } /* # RUBRO (CÓDIGO) */
             
         }
     </style>
@@ -149,7 +149,6 @@
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-            <button class="tab-button" onclick="openTab('rubros-data')">Base de Rubros</button>
         </div>
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
@@ -160,7 +159,7 @@
             </div>
             <h3 class="materials-title">MATERIALES</h3>
             <table id="tabla-materiales">
-                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 8%;">CANTIDAD</th><th style="width: 8%;">UNIDAD</th><th style="width: 35%;">DETALLE</th><th style="width: 30%;">OBS. (RUBRO)</th><th style="width: 14%;"># RUBRO (CÓDIGO)</th><th style="width: 5%;"></th></tr></thead>
+                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE</th><th style="width: 25%;">OBS. (RUBRO)</th><th style="width: 15%;"># RUBRO (CÓDIGO)</th><th style="width: 5%;"></th></tr></thead>
                 <tbody></tbody>
             </table>
             <div class="actions">
@@ -186,16 +185,6 @@
             <h2>Historial de Solicitudes</h2>
             <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
-        </div>
-        
-        <div id="rubros-data" class="tab-content">
-            <h2>Base de Datos de Rubros</h2>
-            <p>Esta es la lista de rubros disponibles para seleccionar en la columna **OBS. (RUBRO)** de la Solicitud. **Escribe un rubro por cada línea**. Recuerda presionar Guardar después de editar.</p>
-            <div style="margin-bottom: 15px;">
-                <label for="rubros-textarea" style="font-weight: bold; color: #004a99;">Editar Lista de Rubros (Uno por línea):</label>
-                <textarea id="rubros-textarea" rows="20" style="width: 100%; border: 1px solid #ccc; padding: 10px; box-sizing: border-box;"></textarea>
-            </div>
-            <button id="btn-guardar-rubros" style="background-color: #28a745;">💾 Guardar Lista de Rubros</button>
         </div>
     </div>
     
@@ -223,117 +212,23 @@
     const btnGuardar = document.getElementById('btn-guardar');
     const notaInput = document.getElementById('nota-input'); 
 
-    // NUEVAS VARIABLES PARA MANEJAR RUBROS
-    const rubrosTextarea = document.getElementById('rubros-textarea');
-    const btnGuardarRubros = document.getElementById('btn-guardar-rubros');
-    let listaRubros = [];
-
-    // Función auxiliar para obtener todos los rubros de la imagen como base inicial
-    function obtenerRubrosCompletosDeLaImagen() {
-        return [
-            "ESTRUCTURAL VIAL", "DESALOJO DE MATERIAL DE EXCAVACION", "DESALOJO DEL MATERIAL DE EXCAVACION",
-            "MEJORAMIENTO DE SUBRASANTE DE LA MAQUINA", "SUMINISTRO Y COLOCACION DE MATERIAL DE SUB BASE II (INCLUYE TRANSPORTE)", 
-            "PROV. Y COLOCACION CON BASE GRANULAR, CLASE I (INCLUYE TRANSPORTE)", "IMPRIMACION ASFALTICA RC-250",
-            "PROV. Y COLOCACION DE HORMIGON ASFALTICO MEZCLADO EN CALIENTE E=4cm.", "SEÑALIZACION PINTURA DE TRAFICO e=15cm",
-            "REPARACION DE CUNETAS Y BACAS DE HORMIGON", "REPLANTEO Y NIVELACION", "REPARACION AGUJEROS",
-            "REPARACION DE BADENES EXISTENTES", "RESANTEO DE ZANJA A MANO", "LIMPIEZA Y DESALOJO MANUAL CON MATERIAL DE EXCAVACION",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE SITIO", "PROV. Y COLOCACION DE HORMIGON SIMPLE F'C=210 Kg/cm2 CON CUNETA DE HORMIGON...",
-            "DEMOLICION DE ACERAS", "DEMOLICION DE MUROS", "DEMOLICION DE ACERAS, SOPORTALES Y BORDILLOS",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE EXCAVACION", "EXTRACCION (INCLUYE TRANSPORTE) DE MATERIAL IMP. HORMIGON SIMPLE F'C=210Kg/cm2",
-            "PROV. Y COLOCACION DE HORMIGON SIMPLE F'C=210Kg/cm2 CON CUNETA DE HORMIGON...",
-            "REPLANTEO Y NIVELACION", "PROV. Y COLOCACION DE CONFINAMIENTO DE H.S. E=8cm.", 
-            "PLANTACION BAJA (margaritas blancas azules y similares).", "AGUA PARA CONTROL DE POLVO", "SUM. E INSTALACION DE PASADERO DE BURBUJAS",
-            "SEÑALIZACION TRAFICO - PINTURA FLECHAS Y SIMBOLOS", "SEÑALIZACION VERT. H=1.20M, CINTA REFLECTIVA, BASE DE HORMIGON",
-            "ARBORIZACION ARBUSTOS (H=0.60M X H=1.80M)", "ARBORIZACION ARBUSTOS",
-            "ARBORIZACION CON ESPECIES NATIVAS (H=1.50-2.0M)", "SUM. LOS AMBIENTADORES REFINERIA",
-            "ARBORIZACION Y AMBIENTACION (H=0.60M X 0.60M)", "SUM. DEL SOMBREADOR Portátil 7x6m del Puesto",
-            "SISTEMA ELÉCTRICO", "INST. DE MEDIDOR CENTRO DE TRANSFORMACIÓN", "TRANSFORMADOR DE Tipo Pad mounted 25kVA 13.2kV",
-            "INSTALACION DE MEDIDOR DE ENERGIA", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 4L", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 6L",
-            "PROV. DE CABLE DE Cobre encauchetado 2x10AWG", "CABLE N° 4 AWG-THW (600V)", "CABLE Nº 95.2 MM2 O 15KV",
-            "CABLE DE COBRE TRIPLEX DE 6AWG CON NEUTRO CORRUGADO EXT", "BAJANTE PARA CONDUCCIÓN ELÉCTRICA 2L",
-            "HPD LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "PROV. Y COLOCACIÓN DE POSTES DE HORMIGÓN DE 13 M.", 
-            "HPD PORTA LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "CABLE DE COBRE MONOPOLAR 1/0 AWG", "TUBERÍA Naranja 3/4mm Tipo INC", "CABLE DE COBRE MONOPOLAR 1/0 AWG",
-            "TUBERÍA NARANJA 38MM TIPO INC", "CABLE DE COBRE MONOPOLAR 1/0 AWG", 
-            "CABLE DE COBRE MONOPOLAR 1/0 AWG", "TUBERÍA NARANJA 38MM TIPO INC", 
-            "HPD LÁMPARA DE ALUMBRADO PÚBLICO 250W LED 5000-6000K 85-240V", 
-            "SISTEMA DE ALCANTARILLADO SANITARIO", "CAJAS DE REVISIÓN", "EXCAVACION A MAQUINA",
-            "RELLENO DE ARENA", "COLCHON DE ARENA", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=220mm",
-            "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=250mm", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=300mm",
-            "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=350mm", "SUMINISTRO DE TUBERIA PVC-CORRUGADA D=400mm",
-            "RELLENO COMPACTADO MANUAL CON MATERIAL DE EXCAVACION", "PROV. Y COLOCACION DE H. SIMPLE T=210kg/cm2, (B=100 x A=40 cm)",
-            "SUMINISTRO Y COLOCACIÓN DE CÁMARA", "DEMOLICION DE CAJAS DE REVISION", "CAJAS DE REVISIÓN DE HORMIGÓN (80 x 80 x 130cm)",
-            "CAJAS DE REVISIÓN DE HORMIGÓN", "RECONSTRUCCIÓN DE CAJAS EXISTENTES (SUBIDA Y BAJADA) TAPA DE HF...",
-            "SISTEMA DE AGUA POTABLE", "SUM. E INST. DE BIODIGESTOR AUTOLIMPIABLE CAPACIDAD 300 LT.", 
-            "SUM. E INST. DE BIODIGESTOR AUTOLIMPIABLE CAPACIDAD 500 LT.",
-            "CAJAS DE REVISIÓN", "EXCAVACION A MAQUINA", "RELLENO DE ARENA",
-            "COLCHON DE ARENA", "SUM. E INST. TUBERIA DE 63MM UZ 0.8MPa (INCLUYE INCLINACION DE 63mm)",
-            "ACOMETIDA DOMICILIARIA (INCL COLLARIN DE 63mm)", "SUM. E INST. DE VALVULA DE 63mm", 
-            "SUM. E INST. DE VALVULA DE 50mm", 
-            "SUM. E INST. DE TUBERIA PVC DE 63mm UZ", "SUM. E INST. DE TUBERIA PVC DE 50mm", 
-            "HIDRANTE HF 4PLG (SUM E INST)", "PROV. Y COLOCACION DE H. SIMPLE e= 0.10 a 0.15m",
-            "CAPA DE RODADURA HORMIGON ASFALTICO MEZCLADO EN CALIENTE E=4cm",
-            "HORMIGON SIMPLE F'=210kg/cm2, tipo encofrado y desencofrado."
-        ];
-    }
-
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
         
-        // Enfocar el input de No. Solicitud al cambiar a la pestaña de solicitud
         if (tabName === 'solicitud') {
             noSolicitudInput.focus();
         }
     }
     
-    // Función de ajuste de altura (simplificada y complementada por CSS)
     function ajustarAlturaTextarea(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
-    
-    // FUNCIONES DE GESTIÓN DE RUBROS
-    function cargarRubros() {
-        const rubrosGuardados = localStorage.getItem('listaRubros');
-        if (rubrosGuardados) {
-            // Se asegura de que todos los rubros estén limpios
-            listaRubros = JSON.parse(rubrosGuardados).map(rubro => rubro.trim());
-        } else {
-            listaRubros = obtenerRubrosCompletosDeLaImagen().map(rubro => rubro.trim());
-            guardarRubros(false); 
-        }
-        rubrosTextarea.value = listaRubros.join('\n');
-    }
-
-    function guardarRubros(showAlert = true) {
-        listaRubros = rubrosTextarea.value
-            .split('\n')
-            .map(rubro => rubro.trim())
-            .filter(rubro => rubro.length > 0);
-        
-        localStorage.setItem('listaRubros', JSON.stringify(listaRubros));
-        if (showAlert) {
-            alert('Lista de Rubros actualizada y guardada.');
-        }
-    }
-
-    function crearSelectRubros(seleccionActual = '') {
-        let options = `<option value="">--- Seleccionar Rubro ---</option>`;
-        listaRubros.forEach(rubro => {
-            const selected = rubro === seleccionActual ? 'selected' : '';
-            options += `<option value="${rubro}" ${selected}>${rubro}</option>`;
-        });
-        return `<select class="select-rubro">${options}</select>`;
-    }
-    // FIN FUNCIONES DE GESTIÓN DE RUBROS
 
     function limpiarFormulario() {
-        // MEJORA: Agregar confirmación antes de limpiar
-        const isEditing = editingSolicitudId.value;
         const hasContent = noSolicitudInput.value || tablaCuerpo.innerHTML.trim();
         
         if (hasContent && !confirm('¿Estás seguro de que deseas limpiar el formulario? Los datos no guardados se perderán.')) {
@@ -351,7 +246,6 @@
         // Agregar las 5 filas iniciales
         for (let i = 0; i < 5; i++) agregarFila();
         
-        // MEJORA: Enfocar el número de solicitud
         noSolicitudInput.focus();
     }
     
@@ -361,19 +255,17 @@
         });
     }
 
-    // FUNCIÓN DE AGREGAR FILA 
+    // FUNCIÓN DE AGREGAR FILA (usando solo textarea)
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
-        const selectRubrosHTML = crearSelectRubros(item.obs);
-
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
             <td><textarea rows="1">${item.cantidad}</textarea></td>
             <td><textarea rows="1">${item.unidad}</textarea></td>
             <td style="text-align: left;"><textarea rows="1">${item.detalle}</textarea></td>
-            <td style="text-align: left;">${selectRubrosHTML}</td> 
+            <td style="text-align: left;"><textarea rows="1">${item.obs}</textarea></td> 
             <td><textarea rows="1">${item.rubro}</textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
@@ -381,12 +273,6 @@
 
         // Ajustar altura de los textareas
         fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
-        
-        // Seleccionar el valor del select si se está cargando
-        if (item.obs) {
-            const selectElement = fila.querySelector('.select-rubro');
-            if (selectElement) selectElement.value = item.obs;
-        }
     }
 
     function establecerFecha() {
@@ -396,10 +282,9 @@
         fechaInput.value = fechaFormateada;
     }
     
-    // FUNCIÓN GUARDAR SOLICITUD 
+    // FUNCIÓN GUARDAR SOLICITUD
     async function guardarSolicitud() {
         
-        // MEJORA: Validación de datos
         if (noSolicitudInput.value.trim() === '') {
             alert('¡ERROR! El campo "No. SOLICITUD" es obligatorio.');
             noSolicitudInput.focus();
@@ -411,16 +296,15 @@
 
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
-            const selectObs = fila.querySelector('.select-rubro'); 
             
-            // MEJORA: Solo guardar filas que tengan contenido en el campo DETALLE (índice 2)
-            if (textareas.length >= 4 && selectObs && textareas[2].value.trim() !== '') { 
+            // Textareas: Cantidad (0), Unidad (1), Detalle (2), OBS (3), Rubro (4)
+            if (textareas.length >= 5 && textareas[2].value.trim() !== '') { 
                 items.push({ 
                     cantidad: textareas[0].value, 
                     unidad: textareas[1].value, 
                     detalle: textareas[2].value, 
-                    obs: selectObs.value, 
-                    rubro: textareas[3].value 
+                    obs: textareas[3].value, 
+                    rubro: textareas[4].value  
                 });
                 hasValidItem = true;
             }
@@ -482,10 +366,11 @@
             notaInput.value = solicitudACargar.nota || ""; 
 
             tablaCuerpo.innerHTML = '';
-            // Se debe volver a cargar la lista de rubros por si ha sido editada
-            cargarRubros(); 
             solicitudACargar.items.forEach(item => agregarFila(item)); 
-            renumerarItems(); // Asegurar numeración correcta
+            renumerarItems(); 
+            
+            // FORZAR AJUSTE DE ALTURA para que se vea plano y sin flechas 
+            tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
             
             openTab('solicitud');
         } else {
@@ -504,7 +389,6 @@
             });
     }
     
-    // MEJORA: Listener para ajuste de altura y formato de cantidad
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
             ajustarAlturaTextarea(e.target);
@@ -515,8 +399,8 @@
     tablaCuerpo.addEventListener('blur', (e) => {
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
-            const valor = parseFloat(textarea.value.replace(',', '.')); // Soporte para coma/punto decimal
-            if (!isNaN(valor)) textarea.value = valor.toFixed(2).replace('.', ','); // Formato con 2 decimales y coma
+            const valor = parseFloat(textarea.value.replace(',', '.'));
+            if (!isNaN(valor)) textarea.value = valor.toFixed(2).replace('.', ',');
         }
     }, true);
     
@@ -530,21 +414,20 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL ACTUALIZADA (Ajuste de anchos de columna)
+    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
         
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
-                // Usar el estilo de alineación de texto justificado para el detalle y el rubro en la impresión
                 itemsHtml += `<tr>
                     <td style="width: 5%;" class="item-column">${itemIndex + 1}</td>
-                    <td style="width: 8%; text-align:center;">${item.cantidad}</td>
-                    <td style="width: 8%; text-align:center;">${item.unidad}</td>
+                    <td style="width: 10%; text-align:center;">${item.cantidad}</td>
+                    <td style="width: 10%; text-align:center;">${item.unidad}</td>
                     <td style="width: 35%; text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle}</td>
-                    <td style="width: 30%; text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td>
-                    <td style="width: 14%; text-align:center;">${item.rubro}</td>
+                    <td style="width: 25%; text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td>
+                    <td style="width: 15%; text-align:center;">${item.rubro}</td>
                 </tr>`;
             });
 
@@ -587,11 +470,11 @@
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
                     <thead><tr>
                         <th style="width: 5%;">ITEM</th>
-                        <th style="width: 8%;">CANTIDAD</th>
-                        <th style="width: 8%;">UNIDAD</th>
+                        <th style="width: 10%;">CANTIDAD</th>
+                        <th style="width: 10%;">UNIDAD</th>
                         <th style="width: 35%;">DETALLE</th>
-                        <th style="width: 30%;">OBS. (RUBRO)</th>
-                        <th style="width: 14%;"># RUBRO (CÓDIGO)</th>
+                        <th style="width: 25%;">OBS. (RUBRO)</th>
+                        <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
                     </tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>`;
@@ -638,14 +521,10 @@
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
     
-    // MEJORA: Listener para impresión individual
     document.getElementById('btn-imprimir').addEventListener('click', () => {
-        // Renumerar antes de imprimir por si acaso
         renumerarItems(); 
         window.print();
     });
-
-    btnGuardarRubros.addEventListener('click', () => guardarRubros());
 
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
@@ -654,8 +533,7 @@
     });
     
     document.addEventListener('DOMContentLoaded', () => {
-        cargarRubros(); 
-        limpiarFormulario(); // Inicializa el formulario con 5 filas y la fecha
+        limpiarFormulario();
         mostrarSolicitudesGuardadas();
         openTab('solicitud'); 
     });
