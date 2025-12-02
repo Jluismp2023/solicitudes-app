@@ -22,20 +22,24 @@
         .solicitud-box { border: 1px solid black; padding: 5px; text-align: center; }
         .solicitud-box label { display: block; font-weight: bold; }
         .solicitud-box input { border: none; width: 150px; text-align: center; }
-        .solicitud-box-print-content { font-size: 1.1em; padding-top: 5px; }
+        
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
-        .materials-header-print { display: flex; justify-content: space-between; align-items: center; background-color: #e0e0e0; border: 1px solid #333; }
-        .materials-header-print .title { flex-grow: 1; text-align: center; font-weight: bold; color: #004a99; padding: 8px; }
-        .materials-header-print .solicitud-num { font-weight: bold; padding: 8px; white-space: nowrap; }
+        
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
+        
+        /* Estilos de inputs en tabla */
+        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
+        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
+        
         .date-section { margin-bottom: 100px; }
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
+        
         .actions, .history-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #btn-agregar { background-color: #28a745; }
@@ -44,54 +48,26 @@
         #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
         .btn-eliminar-fila { background-color: #dc3545; padding: 5px 10px; font-size: 14px; }
         
-        /* Estilos específicos para la tabla de materiales */
-        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
-        /* Centrar texto en Cantidad, Unidad, Rubro Code */
-        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
-        
+        /* Estilos Nota */
+        .note-section { margin-top: 20px; margin-bottom: 20px; }
+        .note-section label { display: block; margin-bottom: 5px; font-weight: bold; color: #004a99; }
+        .note-section textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; }
+
+        /* Estilos Historial */
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
 
-        /* ESTILOS CSS PARA LA NOTA */
-        .note-section {
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .note-section label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #004a99;
-        }
-        .note-section textarea {
-            width: 100%;
-            box-sizing: border-box; 
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
-            resize: vertical;
-        }
-
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            /* Ocultar elementos de navegación y acciones */
             .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; }
-            
-            /* Ocultar la columna de eliminar */
             th:last-child, td:last-child { display: none; }
-            
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
-                border: none; 
-                background-color: transparent; 
-                -webkit-print-color-adjust: exact; 
-                color-adjust: exact; 
-                color: #000; 
+                border: none; background-color: transparent; 
+                -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; 
             }
         }
     </style>
@@ -176,8 +152,10 @@
     }
 
     function ajustarAlturaTextarea(textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${textarea.scrollHeight}px`;
+        if(textarea){
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
     }
     
     function limpiarFormulario() {
@@ -197,19 +175,12 @@
         });
     }
 
-    // --- FUNCIÓN CORREGIDA PARA CARGAR DATOS SIN ERRORES ---
-    function agregarFila(item = {}) {
+    // --- FUNCIÓN CORREGIDA Y ROBUSTA PARA AGREGAR FILAS ---
+    function agregarFila(item = null) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
-        // Obtenemos los valores de forma segura
-        const cantidad = item.cantidad || '';
-        const unidad = item.unidad || '';
-        const detalle = item.detalle || '';
-        const obs = item.obs || '';
-        const rubro = item.rubro || '';
-
-        // Creamos la estructura HTML SIN los valores dentro para evitar errores de renderizado
+        // Creamos la estructura HTML con casillas vacías
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
             <td><textarea rows="1"></textarea></td>
@@ -219,17 +190,25 @@
             <td><textarea rows="1"></textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
-        // Asignamos los valores directamente a las propiedades .value del DOM
-        const textareas = fila.querySelectorAll('textarea');
-        textareas[0].value = cantidad;
-        textareas[1].value = unidad;
-        textareas[2].value = detalle;
-        textareas[3].value = obs;
-        textareas[4].value = rubro;
-
+        // 1. Agregamos la fila al DOM primero
         tablaCuerpo.appendChild(fila);
 
-        // Ajustamos la altura para que se vea todo el texto si es largo
+        // 2. Seleccionamos los textareas recién creados
+        const textareas = fila.querySelectorAll('textarea');
+        
+        // 3. Asignamos los valores directamente a la propiedad .value
+        // Esto evita el error de renderizado que dejaba las casillas en blanco
+        if (item) {
+            textareas[0].value = item.cantidad || '';
+            textareas[1].value = item.unidad || '';
+            textareas[2].value = item.detalle || '';
+            textareas[3].value = item.obs || '';
+            textareas[4].value = item.rubro || '';
+        } else {
+            textareas.forEach(t => t.value = '');
+        }
+
+        // Ajustamos la altura de cada textarea
         textareas.forEach(ajustarAlturaTextarea); 
     }
 
@@ -240,14 +219,12 @@
         fechaInput.value = fechaFormateada;
     }
     
-    // FUNCIÓN GUARDAR SOLICITUD 
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
-            // Verificamos que al menos uno de los campos tenga datos para no guardar filas vacías innecesarias
             if (textareas.length >= 5) {
-                // Solo guardamos si hay algo escrito en Detalle o Cantidad
+                // Guardamos si hay Cantidad O Detalle
                 if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
                     items.push({ 
                         cantidad: textareas[0].value, 
@@ -273,6 +250,7 @@
                 .then(() => {
                     alert('¡Solicitud actualizada con éxito!');
                     limpiarFormulario();
+                    openTab('historial');
                 })
                 .catch((error) => console.error("Error al actualizar: ", error));
         } else {
@@ -303,28 +281,30 @@
 
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
+        
         if (solicitudACargar) {
             noSolicitudInput.value = solicitudACargar.numero || '';
             fechaInput.value = solicitudACargar.fecha || '';
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
-            
             notaInput.value = solicitudACargar.nota || ""; 
 
-            // Limpiamos la tabla visualmente
+            // Limpiamos la tabla visualmente antes de cargar
             tablaCuerpo.innerHTML = '';
             
-            // Si la solicitud tiene items, los agregamos uno por uno
-            if (solicitudACargar.items && solicitudACargar.items.length > 0) {
-                solicitudACargar.items.forEach(item => agregarFila(item));
+            // Verificamos si hay items y los cargamos
+            if (solicitudACargar.items && Array.isArray(solicitudACargar.items) && solicitudACargar.items.length > 0) {
+                solicitudACargar.items.forEach(item => {
+                    agregarFila(item);
+                });
             } else {
-                // Si por error se guardó sin items, mostramos filas vacías
+                // Si la solicitud estaba vacía, mostramos filas por defecto
                 for (let i = 0; i < 5; i++) agregarFila();
             }
             
             openTab('solicitud');
         } else {
-            alert("No se encontró la solicitud.");
+            alert("No se encontró la solicitud. Intente recargar la página.");
         }
     }
 
@@ -333,13 +313,13 @@
             .catch(error => console.error("Error al eliminar: ", error));
     }
     
+    // Eventos
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
             ajustarAlturaTextarea(e.target);
         }
     });
     
-    // Formatear a 2 decimales solo la columna cantidad (index 1)
     tablaCuerpo.addEventListener('blur', (e) => {
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
@@ -357,13 +337,15 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL 
+    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+    document.getElementById('btn-imprimir').addEventListener('click', () => { window.print(); });
+
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
-        
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
-            // Aseguramos que existan items antes de iterar
             const items = solicitud.items || [];
             
             items.forEach((item, itemIndex) => {
@@ -387,85 +369,42 @@
                     </div>
                 </div>`;
             
-            let notaHtml = '';
-            if (solicitud.nota) {
-                notaHtml = `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>`;
-            }
+            let notaHtml = solicitud.nota ? `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>` : '';
             
             const signaturesHtml = `
                 <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR
-                    </div>
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>ING. JOSE MACAS P.</strong><br>TECNICO
-                    </div>
-                    <div style="width: 250px;">
-                        <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
-                        <strong>TCNLG. MARIA LOZANO</strong><br>BODEGA
-                    </div>
+                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
+                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
                 </div>`;
-                
-            const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha || ''}</div>`;
 
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
-                    <thead><tr>
-                        <th style="width: 5%;">ITEM</th>
-                        <th style="width: 10%;">CANTIDAD</th>
-                        <th style="width: 10%;">UNIDAD</th>
-                        <th style="width: 20%;">DETALLE</th>
-                        <th style="width: 40%;">OBS. (RUBRO)</th>
-                        <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
-                    </tr></thead>
+                    <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 20%;">DETALLE</th><th style="width: 40%;">OBS. (RUBRO)</th><th style="width: 15%;"># RUBRO (CÓDIGO)</th></tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>`;
 
             contentHtml += `<div style="padding: 20px; page-break-after: always; border: 1px solid #ddd; margin-bottom: 20px;">
-                ${headerHtml}
-                ${tablaHtml}
-                ${notaHtml}
-                ${fechaHtml}
+                ${headerHtml} ${tablaHtml} ${notaHtml}
+                <div style="margin-top: 20px;"><strong>Fecha:</strong> ${solicitud.fecha || ''}</div>
                 ${signaturesHtml}
             </div>`;
         });
         
         const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow.document.write('<html><head><title>Historial de Solicitudes</title>');
-        printWindow.document.write(`
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-                th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; font-size: 10pt; }
-                th { background-color: #f2f2f2; font-weight: bold; }
-                .item-column { font-weight: bold; }
-                img { max-width: 100%; height: auto; }
-                @page { margin: 1cm; }
-                div[style*="page-break-after: always"] { page-break-after: always; }
-                div[style*="page-break-after: always"]:last-child { page-break-after: avoid; }
-                td[style*="white-space: normal"] { white-space: normal !important; text-align: left !important; }
-            </style>
-        `);
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(`<h1>Historial de Solicitudes</h1><hr>${contentHtml}`);
-        printWindow.document.write('</body></html>');
+        printWindow.document.write('<html><head><title>Historial</title>');
+        printWindow.document.write(`<style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+            th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; font-size: 10pt; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            img { max-width: 100%; height: auto; }
+            td[style*="white-space: normal"] { white-space: normal !important; text-align: left !important; }
+        </style>`);
+        printWindow.document.write(`</head><body><h1>Historial de Solicitudes</h1><hr>${contentHtml}</body></html>`);
         printWindow.document.close();
-        
-        printWindow.onload = () => {
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        };
-    });
-
-    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
-    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
-    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-    document.getElementById('btn-imprimir').addEventListener('click', () => {
-        window.print();
+        printWindow.onload = () => { printWindow.print(); };
     });
 
     listaSolicitudesUI.addEventListener('click', (e) => {
