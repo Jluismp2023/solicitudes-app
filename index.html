@@ -175,34 +175,49 @@
         });
     }
 
-    // --- FUNCIÓN CORREGIDA DEFINITIVAMENTE ---
+    // --- FUNCIÓN CLAVE: RECUPERAR DATOS CON MAYÚSCULAS O MINÚSCULAS ---
+    function obtenerValorSeguro(obj, key) {
+        if (!obj) return '';
+        // 1. Busca coincidencia exacta (ej: 'cantidad')
+        if (obj[key] !== undefined) return obj[key];
+        // 2. Busca en MAYÚSCULAS (ej: 'CANTIDAD') - Esto arregla las solicitudes viejas
+        if (obj[key.toUpperCase()] !== undefined) return obj[key.toUpperCase()];
+        // 3. Busca en minúsculas por si acaso
+        if (obj[key.toLowerCase()] !== undefined) return obj[key.toLowerCase()];
+        
+        return '';
+    }
+
     function agregarFila(item = null) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
         
-        // 1. Preparamos los datos ANTES de crear el HTML
-        // Usamos || '' para asegurarnos que nunca sea undefined
-        const cant = (item && item.cantidad) ? item.cantidad : '';
-        const uni = (item && item.unidad) ? item.unidad : '';
-        const det = (item && item.detalle) ? item.detalle : '';
-        const obs = (item && item.obs) ? item.obs : '';
-        const rub = (item && item.rubro) ? item.rubro : '';
-
-        // 2. Insertamos los valores DIRECTAMENTE en el HTML
-        // Esto garantiza que el valor exista cuando el navegador dibuje la tabla
+        // Creamos la fila vacía primero en el DOM
         fila.innerHTML = `
             <td class="item-column">${itemCount}</td>
-            <td><textarea rows="1">${cant}</textarea></td>
-            <td><textarea rows="1">${uni}</textarea></td>
-            <td><textarea rows="1">${det}</textarea></td>
-            <td><textarea rows="1">${obs}</textarea></td>
-            <td><textarea rows="1">${rub}</textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
+            <td><textarea rows="1"></textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
         tablaCuerpo.appendChild(fila);
 
-        // Ajustamos la altura
-        fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
+        // Ahora llenamos los datos usando la función segura
+        const textareas = fila.querySelectorAll('textarea');
+        
+        if (item) {
+            textareas[0].value = obtenerValorSeguro(item, 'cantidad');
+            textareas[1].value = obtenerValorSeguro(item, 'unidad');
+            textareas[2].value = obtenerValorSeguro(item, 'detalle');
+            textareas[3].value = obtenerValorSeguro(item, 'obs'); // Verifica si antes se llamaba 'rubro' o 'obs'
+            textareas[4].value = obtenerValorSeguro(item, 'rubro');
+        } else {
+            textareas.forEach(t => t.value = '');
+        }
+
+        textareas.forEach(ajustarAlturaTextarea); 
     }
 
     function establecerFecha() {
@@ -217,8 +232,8 @@
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
             if (textareas.length >= 5) {
-                // Guardamos si hay Cantidad O Detalle escrito
                 if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
+                    // Guardamos todo en minúsculas para mantener orden a futuro
                     items.push({ 
                         cantidad: textareas[0].value, 
                         unidad: textareas[1].value, 
@@ -273,7 +288,6 @@
     }
 
     function cargarSolicitud(id) {
-        // Encontramos la solicitud en la memoria
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
         
         if (solicitudACargar) {
@@ -283,16 +297,13 @@
             btnGuardar.textContent = '💾 Guardar Cambios';
             notaInput.value = solicitudACargar.nota || ""; 
 
-            // Limpiamos la tabla visualmente antes de cargar
             tablaCuerpo.innerHTML = '';
             
-            // Verificamos si hay items y los cargamos
             if (solicitudACargar.items && Array.isArray(solicitudACargar.items) && solicitudACargar.items.length > 0) {
                 solicitudACargar.items.forEach(item => {
                     agregarFila(item);
                 });
             } else {
-                // Si la solicitud estaba vacía, mostramos filas vacías
                 for (let i = 0; i < 5; i++) agregarFila();
             }
             
@@ -343,13 +354,19 @@
             const items = solicitud.items || [];
             
             items.forEach((item, itemIndex) => {
+                const cant = obtenerValorSeguro(item, 'cantidad');
+                const uni = obtenerValorSeguro(item, 'unidad');
+                const det = obtenerValorSeguro(item, 'detalle');
+                const obs = obtenerValorSeguro(item, 'obs');
+                const rub = obtenerValorSeguro(item, 'rubro');
+
                 itemsHtml += `<tr>
                     <td class="item-column">${itemIndex + 1}</td>
-                    <td style="text-align:center;">${item.cantidad || ''}</td>
-                    <td style="text-align:center;">${item.unidad || ''}</td>
-                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle || ''}</td>
-                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs || ''}</td>
-                    <td style="text-align:center;">${item.rubro || ''}</td>
+                    <td style="text-align:center;">${cant}</td>
+                    <td style="text-align:center;">${uni}</td>
+                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${det}</td>
+                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${obs}</td>
+                    <td style="text-align:center;">${rub}</td>
                 </tr>`;
             });
 
