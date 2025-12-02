@@ -50,8 +50,6 @@
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
         td:nth-child(4) textarea, td:nth-child(5) textarea { text-align: left; }
         
-        /* Revertimos el estilo de select, ya no es necesario */
-        
         #historial h2 { text-align: center; color: #004a99; }
         #lista-solicitudes { list-style: none; padding: 0; }
         #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -81,12 +79,9 @@
             resize: vertical;
         }
 
-        /* La pestaña de Rubros se elimina, por lo que este estilo ya no es necesario */
-
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            /* Eliminamos la referencia a #rubros-data */
             .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; } 
             
             th:last-child, td:last-child { display: none; }
@@ -98,8 +93,6 @@
                 color-adjust: exact; 
                 color: #000; 
             }
-            
-            /* Eliminamos estilos de select, ya no es necesario */
         }
     </style>
 </head>
@@ -108,7 +101,7 @@
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-            </div>
+        </div>
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
             <div class="header">
@@ -145,8 +138,7 @@
             <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
-        
-        </div>
+    </div>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -172,17 +164,14 @@
     const btnGuardar = document.getElementById('btn-guardar');
     const notaInput = document.getElementById('nota-input'); 
 
-    // Se eliminan las variables de rubros (rubrosTextarea, btnGuardarRubros, listaRubros)
-    // Se elimina la función auxiliar obtenerRubrosCompletosDeLaImagen()
-
-    // Se eliminan las funciones de gestión de Rubros (cargarRubros, guardarRubros, crearSelectRubros)
-
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
     }
+    
+    // Función para ajustar la altura del textarea
     function ajustarAlturaTextarea(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
@@ -206,7 +195,7 @@
         });
     }
 
-    // FUNCIÓN DE AGREGAR FILA REVERTIDA para usar <textarea> en OBS. (RUBRO)
+    // FUNCIÓN DE AGREGAR FILA (CORRECTA)
     function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
         const fila = document.createElement('tr');
         const itemCount = tablaCuerpo.rows.length + 1;
@@ -216,11 +205,13 @@
             <td><textarea rows="1">${item.cantidad}</textarea></td>
             <td><textarea rows="1">${item.unidad}</textarea></td>
             <td><textarea rows="1">${item.detalle}</textarea></td>
-            <td><textarea rows="1">${item.obs}</textarea></td> <td><textarea rows="1">${item.rubro}</textarea></td>
+            <td><textarea rows="1">${item.obs}</textarea></td> 
+            <td><textarea rows="1">${item.rubro}</textarea></td>
             <td><button class="btn-eliminar-fila">🗑️</button></td>`;
         
         tablaCuerpo.appendChild(fila);
 
+        // Aseguramos que se ajusta la altura de TODOS los textareas (incluyendo los cargados)
         fila.querySelectorAll('textarea').forEach(ajustarAlturaTextarea); 
     }
 
@@ -231,20 +222,19 @@
         fechaInput.value = fechaFormateada;
     }
     
-    // FUNCIÓN GUARDAR SOLICITUD - Ahora solo busca textareas.
+    // FUNCIÓN GUARDAR SOLICITUD (CORREGIDA: Orden de textareas para coincidir con la fila)
     function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
-            // Buscamos todos los textareas. Ahora OBS. (RUBRO) también es un textarea.
             const textareas = fila.querySelectorAll('textarea');
 
-            // Orden: Cantidad, Unidad, Detalle, OBS (Rubro), # Rubro
+            // Orden de los textareas: 0: Cantidad, 1: Unidad, 2: Detalle, 3: OBS, 4: # Rubro
             if (textareas.length >= 5) { 
                 items.push({ 
                     cantidad: textareas[0].value, 
                     unidad: textareas[1].value, 
                     detalle: textareas[2].value, 
-                    obs: textareas[3].value, // AHORA LEE DIRECTAMENTE DEL TEXTAREA
+                    obs: textareas[3].value, 
                     rubro: textareas[4].value 
                 });
             }
@@ -299,10 +289,11 @@
             editingSolicitudId.value = id;
             btnGuardar.textContent = '💾 Guardar Cambios';
             
+            // Asegura que la nota se cargue
             notaInput.value = solicitudACargar.nota || ""; 
 
             tablaCuerpo.innerHTML = '';
-            // Se elimina la llamada a cargarRubros()
+            // Carga los items guardados, llamando a agregarFila con los datos
             solicitudACargar.items.forEach(item => agregarFila(item)); 
             
             openTab('solicitud');
@@ -322,15 +313,12 @@
         }
     });
     
-    // MEJORA DE CANTIDAD (Manteniendo la corrección anterior)
+    // MEJORA DE CANTIDAD 
     tablaCuerpo.addEventListener('blur', (e) => {
-        // SOLO aplica a la columna CANTIDAD (cellIndex 1)
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
-            // Reemplaza coma por punto para el parseo y elimina espacios
             const valor = parseFloat(textarea.value.trim().replace(',', '.')); 
             
-            // Solo formatea si el valor es numérico y el campo no está vacío
             if (!isNaN(valor) && textarea.value.trim().length > 0) {
                 textarea.value = valor.toFixed(2);
             }
@@ -344,13 +332,14 @@
         }
     });
     
-    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL - Sin cambios, ya que los datos guardados son texto
+    // FUNCIÓN DE IMPRESIÓN DE HISTORIAL 
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
         
         solicitudesCargadas.forEach((solicitud) => {
             let itemsHtml = '';
             solicitud.items.forEach((item, itemIndex) => {
+                // Asegura que los datos se muestren correctamente en la impresión del historial
                 itemsHtml += `<tr><td class="item-column">${itemIndex + 1}</td><td style="text-align:center;">${item.cantidad}</td><td style="text-align:center;">${item.unidad}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.detalle}</td><td style="text-align:left; white-space: normal; word-wrap: break-word;">${item.obs}</td><td style="text-align:center;">${item.rubro}</td></tr>`;
             });
 
@@ -387,7 +376,6 @@
                 
             const fechaHtml = `<div style="margin-top: 20px;"><strong style="font-weight: bold;">Fecha:</strong> ${solicitud.fecha}</div>`;
 
-            // Anchos de columna
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
@@ -447,8 +435,6 @@
         window.print();
     });
 
-    // Se elimina el evento de btnGuardarRubros
-
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
@@ -458,7 +444,6 @@
     });
     
     document.addEventListener('DOMContentLoaded', () => {
-        // Se elimina la llamada a cargarRubros()
         limpiarFormulario();
         mostrarSolicitudesGuardadas();
         openTab('solicitud'); 
