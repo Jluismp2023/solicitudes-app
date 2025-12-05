@@ -25,7 +25,7 @@
         
         .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; } /* table-layout fixed ayuda a mantener anchos */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; } 
         th, td { border: 1px solid #333; padding: 5px; text-align: center; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
@@ -47,20 +47,20 @@
             box-sizing: border-box; 
             text-align: left; 
             resize: none; 
-            overflow: hidden; /* Oculta barras de desplazamiento */
+            overflow: hidden; 
             font-family: inherit; 
             font-size: 14px; 
             line-height: 1.4; 
-            min-height: 30px; /* Altura mínima para que no se vean colapsados */
+            min-height: 30px; 
         }
         /* Centrar Cantidad, Unidad y # Rubro (ajustando índices para incluir el ítem) */
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; } 
         
-        /* CÓDIGO ACTUALIZADO: AUMENTAR DISTANCIA ENTRE FECHA Y FIRMAS */
+        /* AJUSTE DE MARGEN DE FECHA */
         .date-section { margin-bottom: 100px; text-align: right; padding-right: 5px;} 
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         
-        /* AJUSTE DE FIRMAS PARA ACOMODAR 4 BLOQUES */
+        /* AJUSTE DE FIRMAS PRINCIPALES PARA ACOMODAR 4 BLOQUES */
         .signatures { 
             display: flex; 
             justify-content: space-around; 
@@ -68,9 +68,23 @@
             margin-top: 40px; 
             flex-wrap: wrap; 
         }
-        .signature-block { width: 22%; /* Ajuste para que quepan 4 con espacio */ } 
+        .signature-block { width: 22%; } 
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
         
+        /* NUEVOS ESTILOS PARA LA FIRMA DEL SUBCONTRATISTA (Opcional y Centrada) */
+        .optional-signature {
+            margin-top: 80px; 
+            text-align: center;
+            width: 100%; 
+            display: none; /* Oculto por defecto */
+        }
+        .optional-signature-block {
+            display: inline-block; 
+            width: 300px; 
+            margin: 0 auto; 
+            text-align: center;
+        }
+
         .actions, .history-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #btn-agregar { background-color: #28a745; }
@@ -100,6 +114,10 @@
                 border: none; background-color: transparent; 
                 -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; 
                 resize: none; height: auto;
+            }
+             /* Asegurar que la firma opcional se muestre si es seleccionada para imprimir */
+            .optional-signature.print-visible {
+                display: block !important; 
             }
         }
     </style>
@@ -142,6 +160,15 @@
                 <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
                 <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
+
+            <div class="optional-signature" id="subcontratista-signature">
+                <label>RECIBIDO:</label>
+                <div class="optional-signature-block">
+                    <div class="line" style="margin-top: 30px;"></div>
+                    <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
+                </div>
+            </div>
+            
         </div>
         
         <div id="historial" class="tab-content">
@@ -187,9 +214,7 @@
     // --- FUNCIÓN MEJORADA PARA AJUSTAR ALTURA ---
     function ajustarAlturaTextarea(textarea) {
         if(textarea){
-            // Primero ponemos la altura en 'auto' para que calcule el scrollHeight real
             textarea.style.height = 'auto';
-            // Luego asignamos la altura del contenido + 2px para evitar scrollbars
             textarea.style.height = (textarea.scrollHeight + 2) + 'px';
         }
     }
@@ -201,6 +226,8 @@
         establecerFecha();
         tablaCuerpo.innerHTML = '';
         notaInput.value = ''; 
+        // OCULTAR la firma opcional al limpiar
+        document.getElementById('subcontratista-signature').style.display = 'none';
         for (let i = 0; i < 5; i++) agregarFila();
     }
     
@@ -254,7 +281,6 @@
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
-        // Usamos el contexto de la ciudad de Pasaje, El Oro, Ecuador
         const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
         fechaInput.value = fechaFormateada;
     }
@@ -285,6 +311,9 @@
 
 
     async function guardarSolicitud() {
+        // PREGUNTAR AL USUARIO SI DESEA AGREGAR FIRMA DE SUBCONTRATISTA
+        const agregarSubcontratista = confirm('¿Desea agregar la firma del Subcontratista (SR. JAIME ORTEGA GONZALEZ) a esta solicitud?');
+
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
@@ -306,7 +335,9 @@
             numero: noSolicitudInput.value || 'N/A',
             fecha: fechaInput.value,
             items: items,
-            nota: notaInput.value 
+            nota: notaInput.value,
+            // GUARDAR LA OPCIÓN SELECCIONADA
+            firmaSubcontratista: agregarSubcontratista 
         };
 
         const id = editingSolicitudId.value;
@@ -339,6 +370,7 @@
 
     function cargarSolicitud(id) {
         const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
+        const subcontratistaSignatureBlock = document.getElementById('subcontratista-signature');
         
         if (solicitudACargar) {
             noSolicitudInput.value = solicitudACargar.numero || '';
@@ -347,6 +379,13 @@
             btnGuardar.textContent = '💾 Guardar Cambios';
             notaInput.value = solicitudACargar.nota || ""; 
 
+            // MOSTRAR/OCULTAR la firma opcional al cargar
+            if (solicitudACargar.firmaSubcontratista) {
+                subcontratistaSignatureBlock.style.display = 'block';
+            } else {
+                subcontratistaSignatureBlock.style.display = 'none';
+            }
+            
             tablaCuerpo.innerHTML = '';
             
             if (solicitudACargar.items && Array.isArray(solicitudACargar.items) && solicitudACargar.items.length > 0) {
@@ -397,10 +436,7 @@
                         // Si tiene decimales, aplica 2 decimales
                         textarea.value = valor.toFixed(2);
                     }
-                } else {
-                     // Si la entrada no es un número válido, no hacer nada o limpiar
-                     // textarea.value = ''; 
-                }
+                } 
             }
         }
     }, true);
@@ -415,8 +451,20 @@
     document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
     document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
     document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-    document.getElementById('btn-imprimir').addEventListener('click', () => { window.print(); });
+    
+    // Lógica para imprimir el formulario actual
+    document.getElementById('btn-imprimir').addEventListener('click', () => { 
+        const subcontratistaBlock = document.getElementById('subcontratista-signature');
+        // Si el bloque está visible, se añade la clase para forzar su impresión
+        if(subcontratistaBlock.style.display !== 'none') {
+            subcontratistaBlock.classList.add('print-visible'); 
+        }
+        window.print(); 
+        // Remover la clase después de imprimir
+        subcontratistaBlock.classList.remove('print-visible'); 
+    });
 
+    // Lógica para imprimir el historial detallado
     document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
         let contentHtml = '';
         solicitudesCargadas.forEach((solicitud) => {
@@ -452,7 +500,6 @@
             
             let notaHtml = solicitud.nota ? `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>` : '';
             
-            // --- FIRMAS PARA IMPRESIÓN DEL HISTORIAL (Ajuste para 4 firmas) ---
             const signaturesHtml = `
                 <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
                     <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
@@ -460,7 +507,19 @@
                     <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
                     <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
                 </div>`;
-            // -------------------------------------------------------------------
+            
+            // NUEVA LÓGICA PARA FIRMA DEL SUBCONTRATISTA EN IMPRESIÓN DEL HISTORIAL
+            let subcontratistaHtml = '';
+            if (solicitud.firmaSubcontratista) {
+                subcontratistaHtml = `
+                    <div style="margin-top: 80px; text-align: center; width: 100%;">
+                        <label>RECIBIDO:</label>
+                        <div style="display: inline-block; width: 300px; margin: 0 auto; text-align: center;">
+                            <div style="border-top: 1px solid black; margin-top: 30px; margin-bottom: 5px;"></div>
+                            <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
+                        </div>
+                    </div>`;
+            }
 
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
@@ -480,7 +539,7 @@
                 ${headerHtml} ${tablaHtml} ${notaHtml}
                 <div style="margin-top: 20px; text-align: right;"><strong>Fecha:</strong> ${solicitud.fecha || ''}</div>
                 ${signaturesHtml}
-            </div>`;
+                ${subcontratistaHtml} </div>`;
         });
         
         const printWindow = window.open('', '', 'height=600,width=800');
