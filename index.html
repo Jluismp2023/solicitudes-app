@@ -71,12 +71,12 @@
         .signature-block { width: 22%; } 
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
         
-        /* NUEVOS ESTILOS PARA LA FIRMA DEL SUBCONTRATISTA (Opcional y Centrada) */
+        /* ESTILOS PARA LA FIRMA DEL SUBCONTRATISTA (Opcional y Centrada) */
         .optional-signature {
             margin-top: 80px; 
             text-align: center;
             width: 100%; 
-            display: none; /* Oculto por defecto */
+            display: none; 
         }
         .optional-signature-block {
             display: inline-block; 
@@ -156,8 +156,7 @@
             <div class="date-section"><input type="text" id="fecha-input"></div>
             <div class="signatures">
                 <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+                <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>RESIDENTE DE OBRA</div> <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
                 <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
 
@@ -503,12 +502,11 @@
             const signaturesHtml = `
                 <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
                     <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. JOSE MACAS P.</strong><br>RESIDENTE DE OBRA</div> <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
                     <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
                 </div>`;
             
-            // NUEVA LÓGICA PARA FIRMA DEL SUBCONTRATISTA EN IMPRESIÓN DEL HISTORIAL
+            // LÓGICA PARA FIRMA DEL SUBCONTRATISTA EN IMPRESIÓN DEL HISTORIAL
             let subcontratistaHtml = '';
             if (solicitud.firmaSubcontratista) {
                 subcontratistaHtml = `
