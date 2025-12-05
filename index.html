@@ -59,8 +59,16 @@
         /* AJUSTE DE MARGEN DE FECHA */
         .date-section { margin-bottom: 20px; text-align: right; padding-right: 5px;} 
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
-        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
-        .signature-block { width: 250px; }
+        
+        /* AJUSTE DE FIRMAS PARA ACOMODAR 4 BLOQUES */
+        .signatures { 
+            display: flex; 
+            justify-content: space-around; /* Distribuye el espacio entre los 4 bloques */
+            text-align: center; 
+            margin-top: 40px; 
+            flex-wrap: wrap; /* Permite que las firmas se envuelvan si la pantalla es muy pequeña */
+        }
+        .signature-block { width: 22%; /* Ajuste para que quepan 4 con espacio */ } 
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
         
         .actions, .history-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
@@ -131,7 +139,7 @@
             <div class="signatures">
                 <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
                 <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+                <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div> <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
         </div>
         
@@ -443,12 +451,15 @@
             
             let notaHtml = solicitud.nota ? `<div style="margin-top: 15px; text-align: left;"><strong style="color: #004a99;">NOTA:</strong><p style="margin: 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">${solicitud.nota.replace(/\n/g, '<br>')}</p></div>` : '';
             
+            // --- FIRMAS PARA IMPRESIÓN DEL HISTORIAL (Ajuste para 4 firmas) ---
             const signaturesHtml = `
                 <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 40px;">
-                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                    <div style="width: 250px;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
+                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+                    <div style="width: 22%;"><div style="border-top: 1px solid black; margin-bottom: 5px;"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
                 </div>`;
+            // -------------------------------------------------------------------
 
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
