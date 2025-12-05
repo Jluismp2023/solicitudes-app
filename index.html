@@ -145,7 +145,7 @@
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #consulta-ia { display: none; } /* Ocultar pestaña IA al imprimir */
+            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #consulta-ia { display: none; } 
             th:last-child, td:last-child { display: none; }
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; background-color: transparent; 
@@ -167,7 +167,8 @@
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-            <button class="tab-button" onclick="openTab('consulta-ia')">Consulta IA 🤖</button> </div>
+            <button class="tab-button" onclick="openTab('consulta-ia')">Consulta IA 🤖</button>
+        </div>
         
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
@@ -219,7 +220,7 @@
 
         <div id="consulta-ia" class="tab-content">
             <h2>Consulta Rápida de Materiales (IA Simulación)</h2>
-            <p>Escribe tu consulta (ej: 'cantidad total de cemento', 'solicitudes con rubro 10.05', 'qué se pidió en julio').</p>
+            <p>Escribe tu consulta (ej: 'cantidad total de cemento', 'solicitudes con rubro 10.05', 'solicitud 001', 'materiales para electricidad', 'solicitudes aprobadas por subcontratista').</p>
             <div style="display: flex;">
                 <input type="text" id="consulta-input" placeholder="Escribe tu pregunta aquí..." onkeydown="if(event.key === 'Enter') ejecutarConsultaIA()">
                 <button id="btn-consultar" onclick="ejecutarConsultaIA()">Consultar</button>
@@ -486,12 +487,18 @@
             respuesta = analizarCantidadTotal(query);
         } else if (query.includes('rubro') || query.includes('código')) {
             respuesta = analizarPorRubro(query);
+        } else if (query.includes('solicitud') && (query.match(/\d+/) || query.includes('número'))) {
+            respuesta = analizarPorNumero(query); // Nueva funcionalidad
+        } else if (query.includes('observaciones') || query.includes('nota') || query.includes('área') || query.includes('zona')) {
+            respuesta = analizarPorTexto(query); // Nueva funcionalidad
+        } else if (query.includes('aprobada') || query.includes('subcontratista') || query.includes('firma')) {
+            respuesta = analizarPorFirma(); // Nueva funcionalidad
         } else if (query.includes('mes') || query.includes('fecha')) {
             respuesta = analizarPorTiempo(query);
         } else if (query.includes('solicitudes')) {
-            respuesta = `Hay un total de ${solicitudesCargadas.length} solicitudes guardadas en el sistema. Puedes preguntar por cantidades totales de materiales, rubros o fechas.`;
+            respuesta = `Hay un total de ${solicitudesCargadas.length} solicitudes guardadas en el sistema. Puedes preguntar por cantidades totales de materiales, rubros, fechas, o buscar por notas/áreas específicas.`;
         } else {
-            respuesta = "No entiendo la consulta. Por favor, pregunta por 'cantidad total de [material]', 'solicitudes con rubro [código]', o 'qué se pidió en [mes]'.";
+            respuesta = "No entiendo la consulta. Intenta con: 'cantidad de [material]', 'rubro [código]', 'solicitud [número]', o 'materiales para [área/nota]'.";
         }
         
         // Mostrar la pregunta y la respuesta
@@ -500,7 +507,7 @@
     }
 
     function analizarCantidadTotal(query) {
-        const palabrasClave = query.split(' ').filter(p => p.length > 3 && !['total', 'cantidad', 'de', 'el', 'la', 'un', 'una', 'es', 'se'].includes(p));
+        const palabrasClave = query.split(' ').filter(p => p.length > 3 && !['total', 'cantidad', 'de', 'el', 'la', 'un', 'una', 'es', 'se', 'cuanto', 'pedir'].includes(p));
         
         if (palabrasClave.length === 0) {
             return "Por favor, especifica el material (ej: 'cemento', 'cable', 'arena').";
@@ -519,7 +526,6 @@
                 if (detalle.includes(materialBuscado)) {
                     const cantidad = parseFloat(cantidadStr.replace(',', '.'));
                     if (!isNaN(cantidad)) {
-                         // Sumar solo si la unidad es consistente o si es el primer material encontrado.
                         total += cantidad;
                         unidades[unidad] = (unidades[unidad] || 0) + cantidad;
                     }
@@ -528,10 +534,9 @@
         });
 
         if (total > 0) {
-            // Simplificar la respuesta si las unidades son consistentes
             let unidadFinal = Object.keys(unidades)[0] || "unidades";
             if (Object.keys(unidades).length > 1) {
-                unidadFinal = 'unidades mixtas';
+                unidadFinal = 'unidades mixtas (Verificar Historial)';
             }
             return `La cantidad total de **${materialBuscado.toUpperCase()}** encontrada en todas las solicitudes es de **${total.toFixed(2)} ${unidadFinal}**.`;
         } else {
@@ -588,8 +593,7 @@
             let totalItems = solicitudesEncontradas.reduce((sum, s) => sum + s.items.length, 0);
             let resultado = `En **${mesBuscado.toUpperCase()}**, se realizaron **${solicitudesEncontradas.length} solicitudes**, que suman **${totalItems} líneas de materiales**.<br>`;
             
-            // Opcional: listar los detalles de los items
-            const detalles = solicitudesEncontradas.flatMap(s => s.items.map(item => obtenerValorSeguro(item, 'detalle'))).slice(0, 10); // Mostrar solo 10 ejemplos
+            const detalles = solicitudesEncontradas.flatMap(s => s.items.map(item => obtenerValorSeguro(item, 'detalle'))).slice(0, 10); 
             
             if (detalles.length > 0) {
                 resultado += `<br>Ejemplos de materiales pedidos: <br>* ${detalles.join('<br>* ')}...`;
@@ -598,6 +602,91 @@
         } else {
             return `No se encontraron solicitudes registradas en el mes de ${mesBuscado}.`;
         }
+    }
+
+    // NUEVA FUNCIÓN: Búsqueda por número de solicitud (Resumen)
+    function analizarPorNumero(query) {
+        const match = query.match(/(\d+)/);
+        if (!match) {
+            return "Por favor, especifica el número de la solicitud (ej: 'solicitud 001').";
+        }
+
+        const numeroBuscado = match[0].trim();
+        const solicitud = solicitudesCargadas.find(s => s.numero === numeroBuscado);
+        
+        if (solicitud) {
+            let resultado = `Resumen de la **Solicitud N° ${solicitud.numero}** (${solicitud.fecha}): <br>`;
+            resultado += `* **Firma Subcontratista:** ${solicitud.firmaSubcontratista ? 'SÍ Incluida' : 'NO Incluida'}<br>`;
+            if (solicitud.nota) {
+                resultado += `* **Nota General:** ${solicitud.nota}<br>`;
+            }
+            
+            const items = solicitud.items.map(item => 
+                `* ${obtenerValorSeguro(item, 'cantidad')} ${obtenerValorSeguro(item, 'unidad')} de ${obtenerValorSeguro(item, 'detalle')} (Rubro: ${obtenerValorSeguro(item, 'rubro')})`
+            );
+            resultado += `<br>**Materiales solicitados (${items.length} líneas):**<br>${items.join('<br>')}`;
+            
+            return resultado;
+        } else {
+            return `No se encontró la Solicitud N° ${numeroBuscado}.`;
+        }
+    }
+
+    // NUEVA FUNCIÓN: Búsqueda de coincidencias en Observaciones y Notas
+    function analizarPorTexto(query) {
+        const terminosBusqueda = query.split(' ').filter(p => p.length > 3 && !['la', 'para', 'el', 'de', 'qué', 'en', 'hay', 'nota', 'área', 'zona', 'buscar'].includes(p));
+        
+        if (terminosBusqueda.length === 0) {
+            return "Por favor, especifica un término clave a buscar en notas u observaciones (ej: 'Electricidad', 'oficinas', 'urgente').";
+        }
+        
+        const termino = terminosBusqueda[0];
+        const coincidencias = [];
+        
+        solicitudesCargadas.forEach(solicitud => {
+            const itemsCoincidentes = solicitud.items.filter(item => 
+                obtenerValorSeguro(item, 'obs').toLowerCase().includes(termino) ||
+                obtenerValorSeguro(item, 'detalle').toLowerCase().includes(termino)
+            ).map(item => `${obtenerValorSeguro(item, 'detalle')} (Obs: ${obtenerValorSeguro(item, 'obs')})`);
+
+            const notaCoincidente = solicitud.nota && solicitud.nota.toLowerCase().includes(termino);
+
+            if (itemsCoincidentes.length > 0 || notaCoincidente) {
+                coincidencias.push({
+                    numero: solicitud.numero,
+                    fecha: solicitud.fecha,
+                    items: itemsCoincidentes,
+                    nota: notaCoincidente ? `Nota Gral: ${solicitud.nota.substring(0, 50)}...` : null
+                });
+            }
+        });
+
+        if (coincidencias.length > 0) {
+            let resultado = `Se encontraron **${coincidencias.length} solicitudes** que mencionan '${termino}': <br>`;
+            coincidencias.forEach(s => {
+                resultado += `<br>N° **${s.numero}** (${s.fecha}): <br>`;
+                if (s.nota) resultado += `* ${s.nota}<br>`;
+                if (s.items.length > 0) resultado += `* Coincidencia en ${s.items.length} materiales.`;
+            });
+            return resultado;
+        } else {
+            return `No se encontraron coincidencias para el término '${termino}' en notas u observaciones.`;
+        }
+    }
+
+    // NUEVA FUNCIÓN: Búsqueda por estado de firma
+    function analizarPorFirma() {
+        const firmadas = solicitudesCargadas.filter(s => s.firmaSubcontratista);
+        const pendientes = solicitudesCargadas.filter(s => !s.firmaSubcontratista);
+
+        let resultado = `**Estado de Firmas del Subcontratista (SR. JAIME ORTEGA GONZALEZ):** <br>`;
+        resultado += `* **Solicitudes con firma requerida:** **${firmadas.length}**<br>`;
+        resultado += `* **Solicitudes sin firma requerida:** **${pendientes.length}**<br><br>`;
+        
+        if (firmadas.length > 0) {
+             resultado += `**N° Solicitudes con firma:** ${firmadas.map(s => s.numero).join(', ')}`;
+        }
+        return resultado;
     }
 
 
