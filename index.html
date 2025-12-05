@@ -56,17 +56,17 @@
         /* Centrar Cantidad, Unidad y # Rubro (ajustando índices para incluir el ítem) */
         td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; } 
         
-        /* AJUSTE DE MARGEN DE FECHA */
-        .date-section { margin-bottom: 20px; text-align: right; padding-right: 5px;} 
+        /* CÓDIGO ACTUALIZADO: AUMENTAR DISTANCIA ENTRE FECHA Y FIRMAS */
+        .date-section { margin-bottom: 100px; text-align: right; padding-right: 5px;} 
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         
         /* AJUSTE DE FIRMAS PARA ACOMODAR 4 BLOQUES */
         .signatures { 
             display: flex; 
-            justify-content: space-around; /* Distribuye el espacio entre los 4 bloques */
+            justify-content: space-around; 
             text-align: center; 
             margin-top: 40px; 
-            flex-wrap: wrap; /* Permite que las firmas se envuelvan si la pantalla es muy pequeña */
+            flex-wrap: wrap; 
         }
         .signature-block { width: 22%; /* Ajuste para que quepan 4 con espacio */ } 
         .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
@@ -139,7 +139,8 @@
             <div class="signatures">
                 <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
                 <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div> <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+                <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+                <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
             </div>
         </div>
         
