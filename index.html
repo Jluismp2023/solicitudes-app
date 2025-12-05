@@ -84,11 +84,10 @@
             margin: 0 auto; 
             text-align: center;
         }
-        /* Ajuste para el label "RECIBIDO:" */
+        /* AJUSTE: El label ahora está dentro del bloque centrado y no necesita un display block forzado */
         .optional-signature label {
-            display: block;
             font-weight: bold;
-            text-align: center;
+            display: block; /* Asegura que 'RECIBIDO:' tome su propia línea superior */
             margin-bottom: 5px;
         }
 
@@ -126,7 +125,7 @@
             .optional-signature.print-visible {
                 display: block !important; 
             }
-            /* Estilo para el label en impresión */
+            /* El label se centrará automáticamente dentro del bloque de 100% */
             .optional-signature.print-visible label {
                  text-align: center !important; 
             }
@@ -173,10 +172,8 @@
             </div>
 
             <div class="optional-signature" id="subcontratista-signature">
-                <label>RECIBIDO:</label>
                 <div class="optional-signature-block">
-                    <div class="line" style="margin-top: 30px;"></div>
-                    <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
+                    <label>RECIBIDO:</label> <div class="line" style="margin-top: 5px;"></div> <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
                 </div>
             </div>
             
@@ -217,7 +214,7 @@
 
     function openTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => c.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
     }
@@ -524,9 +521,9 @@
             if (solicitud.firmaSubcontratista) {
                 subcontratistaHtml = `
                     <div style="margin-top: 80px; text-align: center; width: 100%;">
-                        <label>RECIBIDO:</label>
                         <div style="display: inline-block; width: 300px; margin: 0 auto; text-align: center;">
-                            <div style="border-top: 1px solid black; margin-top: 30px; margin-bottom: 5px;"></div>
+                            <label style="font-weight: bold; display: block; margin-bottom: 5px;">RECIBIDO:</label>
+                            <div style="border-top: 1px solid black; margin-top: 5px; margin-bottom: 5px;"></div>
                             <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
                         </div>
                     </div>`;
