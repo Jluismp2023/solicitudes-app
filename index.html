@@ -84,7 +84,6 @@
             margin: 0 auto; 
             text-align: center;
         }
-        /* Ajuste: El label ahora está dentro del bloque centrado y debe ocupar su propia línea */
         .optional-signature label {
             font-weight: bold;
             display: block; 
@@ -102,7 +101,7 @@
         /* Estilos Nota */
         .note-section { margin-top: 20px; margin-bottom: 20px; }
         .note-section label { display: block; margin-bottom: 5px; font-weight: bold; color: #004a99; }
-        .note-section textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4-webkit-print-color-adjust: exact; color-adjust: exact; color: #000; px; padding: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; }
+        .note-section textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; }
 
         /* Estilos Historial */
         #historial h2 { text-align: center; color: #004a99; }
@@ -111,10 +110,42 @@
         .btn-cargar { background-color: #17a2b8; margin: 5px; }
         .btn-eliminar { background-color: #dc3545; margin: 5px; }
 
+        /* ESTILOS DE LA PESTAÑA DE CONSULTA IA */
+        #consulta-ia { padding: 20px; }
+        #consulta-input {
+            width: calc(100% - 120px);
+            padding: 10px;
+            border: 1px solid #004a99;
+            border-radius: 5px 0 0 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #btn-consultar {
+            width: 110px;
+            padding: 10px;
+            background-color: #004a99;
+            border-radius: 0 5px 5px 0;
+            margin-left: -4px;
+            font-size: 16px;
+        }
+        #consulta-resultado {
+            margin-top: 20px;
+            padding: 15px;
+            min-height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .consulta-pregunta { color: #004a99; font-weight: bold; margin-bottom: 10px;}
+        .consulta-respuesta { border-left: 3px solid #28a745; padding-left: 10px; margin-top: 10px; }
+
+
         @media print {
             body { margin: 20px; background-color: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila { display: none; }
+            .tabs, .actions, .history-actions, #historial, .btn-eliminar-fila, #consulta-ia { display: none; } /* Ocultar pestaña IA al imprimir */
             th:last-child, td:last-child { display: none; }
             td textarea, #no_solicitud, #fecha-input, #nota-input { 
                 border: none; background-color: transparent; 
@@ -136,7 +167,7 @@
         <div class="tabs">
             <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
             <button class="tab-button" onclick="openTab('historial')">Historial</button>
-        </div>
+            <button class="tab-button" onclick="openTab('consulta-ia')">Consulta IA 🤖</button> </div>
         
         <div id="solicitud" class="tab-content active">
             <input type="hidden" id="editing-solicitud-id">
@@ -185,6 +216,21 @@
             <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
             <ul id="lista-solicitudes"></ul>
         </div>
+
+        <div id="consulta-ia" class="tab-content">
+            <h2>Consulta Rápida de Materiales (IA Simulación)</h2>
+            <p>Escribe tu consulta (ej: 'cantidad total de cemento', 'solicitudes con rubro 10.05', 'qué se pidió en julio').</p>
+            <div style="display: flex;">
+                <input type="text" id="consulta-input" placeholder="Escribe tu pregunta aquí..." onkeydown="if(event.key === 'Enter') ejecutarConsultaIA()">
+                <button id="btn-consultar" onclick="ejecutarConsultaIA()">Consultar</button>
+            </div>
+            <div id="consulta-resultado">
+                <p class="consulta-pregunta">IA:</p>
+                <div class="consulta-respuesta">
+                    ¡Hola! Estoy lista para ayudarte. Haz una consulta sobre tus solicitudes guardadas.
+                </div>
+            </div>
+        </div>
     </div>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -212,6 +258,10 @@
     const editingSolicitudId = document.getElementById('editing-solicitud-id');
     const btnGuardar = document.getElementById('btn-guardar');
     const notaInput = document.getElementById('nota-input'); 
+    // Elementos de la nueva pestaña IA
+    const consultaInput = document.getElementById('consulta-input');
+    const consultaResultado = document.getElementById('consulta-resultado');
+
 
     // FIX CRÍTICO: Se reescribe openTab para evitar "c is not defined"
     function openTab(tabName) {
@@ -350,7 +400,6 @@
             fecha: fechaInput.value,
             items: items,
             nota: notaInput.value,
-            // GUARDAR LA OPCIÓN SELECCIONADA
             firmaSubcontratista: agregarSubcontratista 
         };
 
@@ -426,6 +475,132 @@
         }
     }
     
+    // --- LÓGICA DE CONSULTA IA SIMULADA ---
+    function ejecutarConsultaIA() {
+        const query = consultaInput.value.toLowerCase().trim();
+        let respuesta = '';
+
+        if (solicitudesCargadas.length === 0) {
+            respuesta = "Aún no hay solicitudes guardadas en la base de datos para analizar.";
+        } else if (query.includes('total') || query.includes('cantidad')) {
+            respuesta = analizarCantidadTotal(query);
+        } else if (query.includes('rubro') || query.includes('código')) {
+            respuesta = analizarPorRubro(query);
+        } else if (query.includes('mes') || query.includes('fecha')) {
+            respuesta = analizarPorTiempo(query);
+        } else if (query.includes('solicitudes')) {
+            respuesta = `Hay un total de ${solicitudesCargadas.length} solicitudes guardadas en el sistema. Puedes preguntar por cantidades totales de materiales, rubros o fechas.`;
+        } else {
+            respuesta = "No entiendo la consulta. Por favor, pregunta por 'cantidad total de [material]', 'solicitudes con rubro [código]', o 'qué se pidió en [mes]'.";
+        }
+        
+        // Mostrar la pregunta y la respuesta
+        consultaResultado.innerHTML = `<p class="consulta-pregunta">Tú: ${consultaInput.value}</p><div class="consulta-respuesta"><p class="consulta-pregunta">IA:</p> ${respuesta}</div>`;
+        consultaInput.value = '';
+    }
+
+    function analizarCantidadTotal(query) {
+        const palabrasClave = query.split(' ').filter(p => p.length > 3 && !['total', 'cantidad', 'de', 'el', 'la', 'un', 'una', 'es', 'se'].includes(p));
+        
+        if (palabrasClave.length === 0) {
+            return "Por favor, especifica el material (ej: 'cemento', 'cable', 'arena').";
+        }
+
+        const materialBuscado = palabrasClave[0];
+        let total = 0;
+        const unidades = {};
+
+        solicitudesCargadas.forEach(solicitud => {
+            solicitud.items.forEach(item => {
+                const detalle = obtenerValorSeguro(item, 'detalle').toLowerCase();
+                const cantidadStr = obtenerValorSeguro(item, 'cantidad');
+                const unidad = obtenerValorSeguro(item, 'unidad');
+                
+                if (detalle.includes(materialBuscado)) {
+                    const cantidad = parseFloat(cantidadStr.replace(',', '.'));
+                    if (!isNaN(cantidad)) {
+                         // Sumar solo si la unidad es consistente o si es el primer material encontrado.
+                        total += cantidad;
+                        unidades[unidad] = (unidades[unidad] || 0) + cantidad;
+                    }
+                }
+            });
+        });
+
+        if (total > 0) {
+            // Simplificar la respuesta si las unidades son consistentes
+            let unidadFinal = Object.keys(unidades)[0] || "unidades";
+            if (Object.keys(unidades).length > 1) {
+                unidadFinal = 'unidades mixtas';
+            }
+            return `La cantidad total de **${materialBuscado.toUpperCase()}** encontrada en todas las solicitudes es de **${total.toFixed(2)} ${unidadFinal}**.`;
+        } else {
+            return `No se encontró el material '${materialBuscado}' en ninguna solicitud. Intenta una palabra clave más general.`;
+        }
+    }
+
+    function analizarPorRubro(query) {
+        const match = query.match(/rubro\s*(\d+\.?\d*)/) || query.match(/código\s*(\d+\.?\d*)/);
+        if (!match) {
+            return "Por favor, especifica un código de rubro válido (ej: 'rubro 10.05').";
+        }
+
+        const rubroBuscado = match[1].trim();
+        const solicitudesEncontradas = [];
+
+        solicitudesCargadas.forEach(solicitud => {
+            const itemsMatch = solicitud.items.filter(item => 
+                obtenerValorSeguro(item, 'rubro').includes(rubroBuscado)
+            );
+            if (itemsMatch.length > 0) {
+                solicitudesEncontradas.push({
+                    numero: solicitud.numero,
+                    fecha: solicitud.fecha,
+                    items: itemsMatch.map(item => `${obtenerValorSeguro(item, 'cantidad')} ${obtenerValorSeguro(item, 'unidad')} de ${obtenerValorSeguro(item, 'detalle')}`)
+                });
+            }
+        });
+
+        if (solicitudesEncontradas.length > 0) {
+            let resultado = `Se encontraron **${solicitudesEncontradas.length} solicitudes** que contienen el **Rubro ${rubroBuscado}**: <br>`;
+            solicitudesEncontradas.forEach(s => {
+                resultado += `<br>N° **${s.numero}** (${s.fecha}): <br>* ${s.items.join('<br>* ')}`;
+            });
+            return resultado;
+        } else {
+            return `No se encontraron materiales solicitados bajo el Rubro ${rubroBuscado}.`;
+        }
+    }
+
+    function analizarPorTiempo(query) {
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        let mesBuscado = meses.find(m => query.includes(m));
+
+        if (!mesBuscado) {
+            return "Por favor, especifica un mes (ej: 'junio').";
+        }
+
+        const solicitudesEncontradas = solicitudesCargadas.filter(solicitud => 
+            solicitud.fecha.toLowerCase().includes(mesBuscado)
+        );
+
+        if (solicitudesEncontradas.length > 0) {
+            let totalItems = solicitudesEncontradas.reduce((sum, s) => sum + s.items.length, 0);
+            let resultado = `En **${mesBuscado.toUpperCase()}**, se realizaron **${solicitudesEncontradas.length} solicitudes**, que suman **${totalItems} líneas de materiales**.<br>`;
+            
+            // Opcional: listar los detalles de los items
+            const detalles = solicitudesEncontradas.flatMap(s => s.items.map(item => obtenerValorSeguro(item, 'detalle'))).slice(0, 10); // Mostrar solo 10 ejemplos
+            
+            if (detalles.length > 0) {
+                resultado += `<br>Ejemplos de materiales pedidos: <br>* ${detalles.join('<br>* ')}...`;
+            }
+            return resultado;
+        } else {
+            return `No se encontraron solicitudes registradas en el mes de ${mesBuscado}.`;
+        }
+    }
+
+
     // Eventos
     tablaCuerpo.addEventListener('input', e => {
         if (e.target.tagName.toLowerCase() === 'textarea') {
@@ -435,19 +610,15 @@
     
     // --- AJUSTE DE FORMATO NUMÉRICO DE CANTIDAD (Mejora: Enteros y Decimales) ---
     tablaCuerpo.addEventListener('blur', (e) => {
-        // Asegurarse de que estamos en la columna de CANTIDAD (índice 1)
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
             const valorOriginal = textarea.value.trim();
             if(valorOriginal !== "") {
-                // Reemplazar coma por punto para asegurar la lectura correcta del flotante
                 const valor = parseFloat(valorOriginal.replace(',', '.')); 
                 if (!isNaN(valor)) {
-                    // Si el valor es entero, lo deja sin decimales
                     if (valor % 1 === 0) {
                         textarea.value = valor.toString(); 
                     } else {
-                        // Si tiene decimales, aplica 2 decimales
                         textarea.value = valor.toFixed(2);
                     }
                 } 
@@ -469,12 +640,10 @@
     // Lógica para imprimir el formulario actual
     document.getElementById('btn-imprimir').addEventListener('click', () => { 
         const subcontratistaBlock = document.getElementById('subcontratista-signature');
-        // Si el bloque está visible, se añade la clase para forzar su impresión
         if(subcontratistaBlock.style.display !== 'none') {
             subcontratistaBlock.classList.add('print-visible'); 
         }
         window.print(); 
-        // Remover la clase después de imprimir
         subcontratistaBlock.classList.remove('print-visible'); 
     });
 
