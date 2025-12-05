@@ -30,6 +30,15 @@
         th { background-color: #f2f2f2; font-weight: bold; }
         td.item-column { font-weight: bold; padding-top: 12px; }
         
+        /* AJUSTE DE ANCHOS DE COLUMNAS PARA MEJOR LECTURA */
+        #tabla-materiales th:nth-child(1), #tabla-materiales td:nth-child(1) { width: 5%; }  /* ITEM */
+        #tabla-materiales th:nth-child(2), #tabla-materiales td:nth-child(2) { width: 10%; } /* CANTIDAD */
+        #tabla-materiales th:nth-child(3), #tabla-materiales td:nth-child(3) { width: 10%; } /* UNIDAD */
+        #tabla-materiales th:nth-child(4), #tabla-materiales td:nth-child(4) { width: 35%; text-align: left; } /* DETALLE */
+        #tabla-materiales th:nth-child(5), #tabla-materiales td:nth-child(5) { width: 25%; text-align: left; } /* OBS */
+        #tabla-materiales th:nth-child(6), #tabla-materiales td:nth-child(6) { width: 10%; } /* # RUBRO */
+        #tabla-materiales th:nth-child(7), #tabla-materiales td:nth-child(7) { width: 5%; }  /* ELIMINAR */
+
         /* Estilos de inputs en tabla */
         td textarea { 
             width: 100%; 
@@ -44,9 +53,11 @@
             line-height: 1.4; 
             min-height: 30px; /* Altura mínima para que no se vean colapsados */
         }
-        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
+        /* Centrar Cantidad, Unidad y # Rubro (ajustando índices para incluir el ítem) */
+        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; } 
         
-        .date-section { margin-bottom: 100px; }
+        /* AJUSTE DE MARGEN DE FECHA */
+        .date-section { margin-bottom: 20px; text-align: right; padding-right: 5px;} 
         #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
         .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
         .signature-block { width: 250px; }
@@ -226,7 +237,6 @@
         }
 
         // --- CORRECCIÓN FINAL: RETRASO PARA EL AJUSTE DE ALTURA ---
-        // Esto le da tiempo al navegador para "pintar" el texto antes de medir la altura
         setTimeout(() => {
             textareas.forEach(ajustarAlturaTextarea);
         }, 50); 
@@ -235,15 +245,42 @@
     function establecerFecha() {
         const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const fecha = new Date();
+        // Usamos el contexto de la ciudad de Pasaje, El Oro, Ecuador
         const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
         fechaInput.value = fechaFormateada;
     }
     
-    function guardarSolicitud() {
+    // --- NUEVO SERVICIO DE BASE DE DATOS MODULARIZADO ---
+    const dbService = {
+        async fetchSolicitudes() {
+            return db.collection("solicitudes").orderBy("creadoEn", "desc").get();
+        },
+
+        async saveSolicitud(id, data) {
+            if (id) {
+                return db.collection("solicitudes").doc(id).update(data);
+            } else {
+                data.creadoEn = firebase.firestore.FieldValue.serverTimestamp();
+                return db.collection("solicitudes").add(data);
+            }
+        },
+
+        async deleteSolicitud(id) {
+            return db.collection("solicitudes").doc(id).delete();
+        },
+
+        setupRealtimeListener(callback) {
+            return db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot(callback);
+        }
+    };
+
+
+    async function guardarSolicitud() {
         const items = [];
         tablaCuerpo.querySelectorAll('tr').forEach(fila => {
             const textareas = fila.querySelectorAll('textarea');
             if (textareas.length >= 5) {
+                // Solo guardar filas que tengan cantidad o detalle
                 if(textareas[0].value.trim() !== '' || textareas[2].value.trim() !== '') {
                     items.push({ 
                         cantidad: textareas[0].value, 
@@ -264,27 +301,20 @@
         };
 
         const id = editingSolicitudId.value;
-        if (id) {
-            db.collection("solicitudes").doc(id).update(solicitudData)
-                .then(() => {
-                    alert('¡Solicitud actualizada con éxito!');
-                    limpiarFormulario();
-                    openTab('historial');
-                })
-                .catch((error) => console.error("Error al actualizar: ", error));
-        } else {
-            solicitudData.creadoEn = firebase.firestore.FieldValue.serverTimestamp(); 
-            db.collection("solicitudes").add(solicitudData)
-                .then(() => {
-                    alert('¡Solicitud guardada con éxito en la nube!');
-                    limpiarFormulario();
-                })
-                .catch((error) => console.error("Error al guardar: ", error));
+        
+        try {
+            await dbService.saveSolicitud(id, solicitudData);
+            alert(`¡Solicitud ${id ? 'actualizada' : 'guardada'} con éxito en la nube!`);
+            limpiarFormulario();
+            if (id) openTab('historial');
+        } catch (error) {
+            console.error(`Error al ${id ? 'actualizar' : 'guardar'}: `, error);
+            alert(`Hubo un error al ${id ? 'actualizar' : 'guardar'} la solicitud. Revise la consola.`);
         }
     }
     
     function mostrarSolicitudesGuardadas() {
-        db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
+        dbService.setupRealtimeListener((querySnapshot) => {
             solicitudesCargadas = [];
             listaSolicitudesUI.innerHTML = '';
             querySnapshot.forEach((doc) => {
@@ -325,8 +355,13 @@
     }
 
     function eliminarSolicitud(id) {
-        db.collection("solicitudes").doc(id).delete()
-            .catch(error => console.error("Error al eliminar: ", error));
+        if (confirm('¿Estás seguro de que quieres eliminar esta solicitud de forma permanente?')) {
+            dbService.deleteSolicitud(id)
+                .catch(error => {
+                    console.error("Error al eliminar: ", error);
+                    alert("Error al eliminar la solicitud. Revise la consola.");
+                });
+        }
     }
     
     // Eventos
@@ -336,12 +371,27 @@
         }
     });
     
+    // --- AJUSTE DE FORMATO NUMÉRICO DE CANTIDAD (Mejora: Enteros y Decimales) ---
     tablaCuerpo.addEventListener('blur', (e) => {
+        // Asegurarse de que estamos en la columna de CANTIDAD (índice 1)
         if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
             const textarea = e.target;
-            if(textarea.value.trim() !== "") {
-                const valor = parseFloat(textarea.value);
-                if (!isNaN(valor)) textarea.value = valor.toFixed(2);
+            const valorOriginal = textarea.value.trim();
+            if(valorOriginal !== "") {
+                // Reemplazar coma por punto para asegurar la lectura correcta del flotante
+                const valor = parseFloat(valorOriginal.replace(',', '.')); 
+                if (!isNaN(valor)) {
+                    // Si el valor es entero, lo deja sin decimales
+                    if (valor % 1 === 0) {
+                        textarea.value = valor.toString(); 
+                    } else {
+                        // Si tiene decimales, aplica 2 decimales
+                        textarea.value = valor.toFixed(2);
+                    }
+                } else {
+                     // Si la entrada no es un número válido, no hacer nada o limpiar
+                     // textarea.value = ''; 
+                }
             }
         }
     }, true);
@@ -372,12 +422,12 @@
                 const rub = obtenerValorSeguro(item, 'rubro');
 
                 itemsHtml += `<tr>
-                    <td class="item-column">${itemIndex + 1}</td>
-                    <td style="text-align:center;">${cant}</td>
-                    <td style="text-align:center;">${uni}</td>
-                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${det}</td>
-                    <td style="text-align:left; white-space: normal; word-wrap: break-word;">${obs}</td>
-                    <td style="text-align:center;">${rub}</td>
+                    <td class="item-column" style="width: 5%;">${itemIndex + 1}</td>
+                    <td style="width: 10%; text-align:center;">${cant}</td>
+                    <td style="width: 10%; text-align:center;">${uni}</td>
+                    <td style="width: 35%; text-align:left; white-space: normal; word-wrap: break-word;">${det}</td>
+                    <td style="width: 25%; text-align:left; white-space: normal; word-wrap: break-word;">${obs}</td>
+                    <td style="width: 15%; text-align:center;">${rub}</td>
                 </tr>`;
             });
 
@@ -403,13 +453,20 @@
             const tablaHtml = `
                 <h3 style="text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99;">MATERIALES</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
-                    <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 20%;">DETALLE</th><th style="width: 40%;">OBS. (RUBRO)</th><th style="width: 15%;"># RUBRO (CÓDIGO)</th></tr></thead>
+                    <thead><tr>
+                        <th style="width: 5%;">ITEM</th>
+                        <th style="width: 10%;">CANTIDAD</th>
+                        <th style="width: 10%;">UNIDAD</th>
+                        <th style="width: 35%;">DETALLE</th>
+                        <th style="width: 25%;">OBS. (RUBRO)</th>
+                        <th style="width: 15%;"># RUBRO (CÓDIGO)</th>
+                    </tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>`;
 
             contentHtml += `<div style="padding: 20px; page-break-after: always; border: 1px solid #ddd; margin-bottom: 20px;">
                 ${headerHtml} ${tablaHtml} ${notaHtml}
-                <div style="margin-top: 20px;"><strong>Fecha:</strong> ${solicitud.fecha || ''}</div>
+                <div style="margin-top: 20px; text-align: right;"><strong>Fecha:</strong> ${solicitud.fecha || ''}</div>
                 ${signaturesHtml}
             </div>`;
         });
@@ -418,11 +475,21 @@
         printWindow.document.write('<html><head><title>Historial</title>');
         printWindow.document.write(`<style>
             body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
             th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; font-size: 10pt; }
             th { background-color: #f2f2f2; font-weight: bold; }
             img { max-width: 100%; height: auto; }
-            td[style*="white-space: normal"] { white-space: normal !important; text-align: left !important; }
+            /* Asegurar que las celdas de texto largo se alineen a la izquierda y manejen el salto de línea */
+            td[style*="text-align:left"] { text-align: left !important; } 
+            td[style*="white-space: normal"] { white-space: normal !important; word-break: break-word; }
+            
+            /* Ajuste de anchos para la impresión del historial */
+            table th:nth-child(1), table td:nth-child(1) { width: 5%; }
+            table th:nth-child(2), table td:nth-child(2) { width: 10%; }
+            table th:nth-child(3), table td:nth-child(3) { width: 10%; }
+            table th:nth-child(4), table td:nth-child(4) { width: 35%; }
+            table th:nth-child(5), table td:nth-child(5) { width: 25%; }
+            table th:nth-child(6), table td:nth-child(6) { width: 15%; }
         </style>`);
         printWindow.document.write(`</head><body><h1>Historial de Solicitudes</h1><hr>${contentHtml}</body></html>`);
         printWindow.document.close();
@@ -431,9 +498,9 @@
 
     listaSolicitudesUI.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
-        if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
-        if (e.target.classList.contains('btn-eliminar')) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
+        if (id) {
+            if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
+            if (e.target.classList.contains('btn-eliminar')) eliminarSolicitud(id);
         }
     });
     
