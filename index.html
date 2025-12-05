@@ -102,7 +102,7 @@
         /* Estilos Nota */
         .note-section { margin-top: 20px; margin-bottom: 20px; }
         .note-section label { display: block; margin-bottom: 5px; font-weight: bold; color: #004a99; }
-        .note-section textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; }
+        .note-section textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4-webkit-print-color-adjust: exact; color-adjust: exact; color: #000; px; padding: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; }
 
         /* Estilos Historial */
         #historial h2 { text-align: center; color: #004a99; }
@@ -213,9 +213,14 @@
     const btnGuardar = document.getElementById('btn-guardar');
     const notaInput = document.getElementById('nota-input'); 
 
+    // FIX CRÍTICO: Se reescribe openTab para evitar "c is not defined"
     function openTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => c.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(function(content) { 
+            content.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-button').forEach(function(button) { 
+            button.classList.remove('active');
+        });
         document.getElementById(tabName).classList.add('active');
         document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
     }
