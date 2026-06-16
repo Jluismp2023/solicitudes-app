@@ -4,306 +4,1312 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitud de Materiales</title>
+    <link rel="icon" type="image/jpeg" href="IMG-20250724-WA0025.jpg">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
-        .app-container { max-width: 900px; margin: 20px auto; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .tabs { display: flex; background-color: #004a99; }
-        .tab-button { padding: 15px 20px; cursor: pointer; border: none; background-color: #004a99; color: white; font-size: 16px; transition: background-color 0.3s; }
-        .tab-button:hover { background-color: #005cbf; }
-        .tab-button.active { background-color: #fff; color: #004a99; font-weight: bold; }
-        .tab-content { display: none; padding: 20px; border: 2px solid #004a99; border-top: none; }
+        /* =============================================
+           VARIABLES Y BASE
+        ============================================= */
+        :root {
+            --azul:      #004a99;
+            --azul-claro:#005cbf;
+            --verde:     #28a745;
+            --rojo:      #dc3545;
+            --amarillo:  #ffc107;
+            --gris:      #6c757d;
+            --info:      #17a2b8;
+            --fondo:     #f4f4f4;
+            --borde:     #dee2e6;
+            --texto:     #212529;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: var(--fondo); color: var(--texto); }
+
+        .app-container { max-width: 960px; margin: 20px auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,0.12); border-radius: 4px; overflow: hidden; }
+
+        /* =============================================
+           PESTAÑAS
+        ============================================= */
+        .tabs { display: flex; background: var(--azul); flex-wrap: wrap; }
+        .tab-button { padding: 14px 18px; cursor: pointer; border: none; background: var(--azul); color: #fff; font-size: 14px; transition: background 0.2s; white-space: nowrap; }
+        .tab-button:hover  { background: var(--azul-claro); }
+        .tab-button.active { background: #fff; color: var(--azul); font-weight: bold; }
+
+        .tab-content { display: none; padding: 20px; border: 2px solid var(--azul); border-top: none; }
         .tab-content.active { display: block; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 10px; }
-        .header-logo img { width: 200px; height: auto; margin-right: 15px; }
-        .header-title { text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.5em; color: #004a99; }
-        .solicitud-box { border: 1px solid black; padding: 5px; }
-        .solicitud-box label { display: block; font-weight: bold; }
-        .solicitud-box input { border: none; width: 150px; text-align: center; }
-        .materials-title { text-align: center; font-weight: bold; background-color: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: #004a99; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: top; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        td.item-column { font-weight: bold; padding-top: 12px; }
-        .date-section { margin-bottom: 100px; }
-        #fecha-input { border: none; border-bottom: 1px dotted black; font-weight: bold; font-size: 1em; width: 300px; }
-        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; }
-        .signature-block { width: 250px; }
-        .signature-block .line { border-top: 1px solid black; margin-bottom: 5px; }
-        .actions, .history-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
-        #btn-agregar { background-color: #28a745; }
-        #btn-guardar { background-color: #007bff; }
-        #btn-limpiar { background-color: #ffc107; color: black; }
-        #btn-imprimir, #btn-imprimir-historial { background-color: #6c757d; }
-        td textarea { width: 100%; border: none; padding: 5px; box-sizing: border-box; text-align: left; resize: none; overflow: hidden; font-family: inherit; font-size: inherit; line-height: 1.4; }
-        
-        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(4) textarea, td:nth-child(5) textarea, td:nth-child(6) textarea { text-align: center; }
 
-        #historial h2 { text-align: center; color: #004a99; }
-        #lista-solicitudes { list-style: none; padding: 0; }
-        #lista-solicitudes li { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .btn-cargar { background-color: #17a2b8; margin: 5px; }
-        .btn-eliminar { background-color: #dc3545; margin: 5px; }
-        
-        /* Contenedor oculto para la impresión detallada */
-        #print-historial-detallado { display: none; }
+        /* =============================================
+           CABECERA DE SOLICITUD
+        ============================================= */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--azul); padding-bottom: 10px; margin-bottom: 10px; gap: 10px; }
+        .header-logo img { width: 180px; height: auto; }
+        .header-title { text-align: center; flex-grow: 1; font-weight: bold; font-size: 1.4em; color: var(--azul); }
+        .solicitud-box { border: 1px solid #333; padding: 6px 10px; text-align: center; min-width: 140px; }
+        .solicitud-box label { display: block; font-weight: bold; font-size: 0.85em; }
+        .solicitud-box input  { border: none; width: 130px; text-align: center; font-size: 1em; outline: none; }
 
+        /* =============================================
+           TABLA DE MATERIALES
+        ============================================= */
+        .materials-title { text-align: center; font-weight: bold; background: #e0e0e0; padding: 8px; border: 1px solid #333; margin-bottom: 0; color: var(--azul); }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; }
+        th, td { border: 1px solid #333; padding: 5px; text-align: center; vertical-align: top; }
+        th { background: #f2f2f2; font-weight: bold; font-size: 13px; }
+        td.item-column { font-weight: bold; padding-top: 10px; font-size: 13px; }
+
+        #tabla-materiales th:nth-child(1), #tabla-materiales td:nth-child(1) { width: 5%; }
+        #tabla-materiales th:nth-child(2), #tabla-materiales td:nth-child(2) { width: 9%; }
+        #tabla-materiales th:nth-child(3), #tabla-materiales td:nth-child(3) { width: 9%; }
+        #tabla-materiales th:nth-child(4), #tabla-materiales td:nth-child(4) { width: 35%; text-align: left; }
+        #tabla-materiales th:nth-child(5), #tabla-materiales td:nth-child(5) { width: 25%; text-align: left; }
+        #tabla-materiales th:nth-child(6), #tabla-materiales td:nth-child(6) { width: 12%; }
+        #tabla-materiales th:nth-child(7), #tabla-materiales td:nth-child(7) { width: 5%; }
+
+        td textarea {
+            width: 100%; border: none; padding: 4px; resize: none; overflow: hidden;
+            font-family: inherit; font-size: 13px; line-height: 1.4; min-height: 28px;
+            background: transparent;
+        }
+        td:nth-child(2) textarea, td:nth-child(3) textarea, td:nth-child(6) textarea { text-align: center; }
+
+        /* =============================================
+           BOTONES GENERALES
+        ============================================= */
+        .actions, .history-actions { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+        button { padding: 9px 14px; font-size: 14px; cursor: pointer; border: none; border-radius: 4px; color: #fff; transition: opacity 0.2s; }
+        button:hover { opacity: 0.88; }
+
+        #btn-agregar           { background: var(--verde); }
+        #btn-guardar           { background: var(--azul); }
+        #btn-limpiar           { background: var(--amarillo); color: #333; }
+        #btn-imprimir,
+        #btn-imprimir-historial { background: var(--gris); }
+        #btn-exportar-csv      { background: #198754; }
+        .btn-eliminar-fila     { background: var(--rojo); padding: 4px 8px; font-size: 12px; }
+        .btn-cargar            { background: var(--info); margin: 3px; }
+        .btn-eliminar          { background: var(--rojo); margin: 3px; }
+        .btn-ver               { background: var(--azul); margin: 3px; }
+
+        /* =============================================
+           FECHA Y FIRMAS
+        ============================================= */
+        .date-section { margin-bottom: 90px; text-align: right; padding-right: 5px; margin-top: 10px; }
+        #fecha-input { border: none; border-bottom: 1px dotted #333; font-weight: bold; font-size: 1em; width: 300px; outline: none; }
+
+        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 40px; flex-wrap: wrap; }
+        .signature-block { width: 22%; min-width: 120px; }
+        .signature-block .line { border-top: 1px solid #333; margin-bottom: 5px; }
+
+        .optional-signature { margin-top: 70px; text-align: center; width: 100%; display: none; }
+        .optional-signature-block { display: inline-block; width: 300px; text-align: center; }
+        .optional-signature label { font-weight: bold; display: block; margin-bottom: 5px; }
+
+        /* =============================================
+           NOTA
+        ============================================= */
+        .note-section { margin: 12px 0; }
+        .note-section label { display: block; margin-bottom: 4px; font-weight: bold; color: var(--azul); }
+        .note-section textarea { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-family: inherit; font-size: 1em; resize: vertical; }
+
+        /* =============================================
+           HISTORIAL — BUSCADOR SUPERIOR
+        ============================================= */
+        #historial h2 { text-align: center; color: var(--azul); margin-top: 0; }
+
+        .search-panel {
+            background: #f0f5ff;
+            border: 1px solid #c0d4f5;
+            border-radius: 6px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+        .search-panel h3 { margin: 0 0 10px; font-size: 14px; color: var(--azul); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 580px) { .search-grid { grid-template-columns: 1fr; } }
+
+        .search-field label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 3px; }
+        .search-field input, .search-field select {
+            width: 100%; padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px;
+            font-size: 13px; font-family: inherit;
+        }
+
+        .search-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        #btn-buscar     { background: var(--azul); padding: 8px 18px; font-size: 13px; }
+        #btn-limpiar-filtros { background: var(--gris); padding: 8px 14px; font-size: 13px; }
+
+        /* Resumen de resultados */
+        #search-summary {
+            font-size: 13px; color: #555; margin-bottom: 8px; padding: 6px 10px;
+            background: #fff8e1; border-left: 4px solid var(--amarillo);
+            border-radius: 0 4px 4px 0; display: none;
+        }
+
+        /* =============================================
+           LISTA DE HISTORIAL
+        ============================================= */
+        #lista-solicitudes { list-style: none; padding: 0; margin: 0; }
+        #lista-solicitudes li {
+            background: #f8f9fa; border: 1px solid var(--borde);
+            padding: 10px 12px; margin-bottom: 8px; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        #lista-solicitudes li .info-solicitud { font-size: 13px; flex: 1; min-width: 200px; }
+        #lista-solicitudes li .info-solicitud strong { color: var(--azul); }
+        .badge-firma { display: inline-block; font-size: 11px; background: var(--verde); color: #fff; border-radius: 10px; padding: 1px 7px; margin-left: 6px; }
+
+        /* Detalle expandible */
+        .detalle-solicitud {
+            display: none; margin-top: 10px; padding: 10px;
+            background: #fff; border: 1px solid #c0d4f5; border-radius: 4px; width: 100%;
+        }
+        .detalle-solicitud.visible { display: block; }
+        .detalle-solicitud table { margin-bottom: 0; font-size: 12px; }
+        .detalle-solicitud th { font-size: 11px; }
+        .detalle-solicitud .nota-detalle { margin-top: 8px; font-size: 12px; color: #444; }
+        .highlight { background: #fff176; font-weight: bold; }
+
+        /* Sin resultados */
+        #sin-resultados { display: none; text-align: center; padding: 30px; color: #888; font-style: italic; }
+
+        /* =============================================
+           PESTAÑA BÚSQUEDA AVANZADA DE MATERIALES
+        ============================================= */
+        #busqueda h2 { text-align: center; color: var(--azul); margin-top: 0; }
+
+        .busqueda-panel {
+            display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        #material-input {
+            flex: 1; min-width: 200px; padding: 10px 14px;
+            border: 2px solid var(--azul); border-radius: 4px 0 0 4px;
+            font-size: 15px; font-family: inherit; outline: none;
+        }
+        #material-input:focus { border-color: var(--azul-claro); }
+        #btn-buscar-material {
+            background: var(--azul); padding: 10px 20px; font-size: 15px;
+            border-radius: 0 4px 4px 0; margin-left: -2px;
+        }
+
+        .chips-criterio { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .chip {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
+            border: 1.5px solid var(--azul); color: var(--azul); background: #fff;
+            transition: all 0.15s;
+        }
+        .chip.active { background: var(--azul); color: #fff; }
+
+        #resultados-busqueda { margin-top: 10px; }
+
+        .resultado-card {
+            border: 1px solid var(--borde); border-radius: 6px; margin-bottom: 12px; overflow: hidden;
+        }
+        .resultado-card-header {
+            background: #eef3fb; padding: 8px 14px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        .resultado-card-header strong { color: var(--azul); font-size: 14px; }
+        .resultado-card-header span  { font-size: 12px; color: #666; }
+        .resultado-card table { margin: 0; }
+        .resultado-card td, .resultado-card th { font-size: 12px; }
+
+        #resumen-material {
+            background: #e8f5e9; border-left: 4px solid var(--verde);
+            padding: 10px 14px; border-radius: 0 4px 4px 0;
+            margin-bottom: 14px; font-size: 13px; display: none;
+        }
+        #resumen-material strong { font-size: 15px; color: #155724; }
+
+        /* =============================================
+           PESTAÑA CONSULTA IA
+        ============================================= */
+        #consulta-ia { }
+        #consulta-ia h2 { text-align: center; color: var(--azul); margin-top: 0; }
+        #consulta-ia p  { font-size: 13px; color: #555; }
+
+        .ia-input-row { display: flex; gap: 0; }
+        #consulta-input {
+            flex: 1; padding: 10px 14px; border: 1px solid var(--azul);
+            border-radius: 4px 0 0 4px; font-size: 15px; font-family: inherit; outline: none;
+        }
+        #btn-consultar { background: var(--azul); padding: 10px 18px; font-size: 14px; border-radius: 0 4px 4px 0; }
+
+        /* Historial de consultas IA */
+        #historial-ia {
+            margin-top: 14px; max-height: 500px; overflow-y: auto;
+            display: flex; flex-direction: column-reverse; gap: 10px;
+        }
+        .ia-burbuja { border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; }
+        .ia-burbuja.pregunta { background: #eef3fb; border-left: 3px solid var(--azul); }
+        .ia-burbuja.respuesta { background: #f1f8f1; border-left: 3px solid var(--verde); }
+        .ia-burbuja .ia-label { font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; color: #888; }
+
+        /* =============================================
+           IMPRESIÓN
+        ============================================= */
         @media print {
-            body { margin: 20px; background-color: #fff; }
+            body { margin: 20px; background: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial { display: none; }
-            
-            /* Lógica para imprimir el formulario o el historial detallado */
-            body:not(.printing-historial) #solicitud { display: block; }
-            body.printing-historial #solicitud { display: none; }
-            body.printing-historial #print-historial-detallado { display: block; }
-            
-            /* Estilos para cada solicitud impresa en el historial */
-            .solicitud-impresa {
-                page-break-before: always; /* Cada solicitud empieza en una nueva página */
-                padding-top: 20px;
+            .tabs, .actions, .history-actions, #historial, #busqueda, #consulta-ia,
+            .btn-eliminar-fila, .search-panel, #search-summary { display: none !important; }
+            th:last-child, td:last-child { display: none; }
+            td textarea, #no_solicitud, #fecha-input, #nota-input {
+                border: none; background: transparent;
+                -webkit-print-color-adjust: exact; color-adjust: exact; color: #000;
+                resize: none; height: auto;
             }
-            .solicitud-impresa:first-child {
-                page-break-before: auto; /* Evita un salto de página antes del primer elemento */
-            }
-            
-            td textarea, #no_solicitud, #fecha-input { border: none; background-color: transparent; -webkit-print-color-adjust: exact; color-adjust: exact; color: #000; }
+            .optional-signature.print-visible { display: block !important; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="tabs">
-            <button class="tab-button active" onclick="openTab('solicitud')">Nueva Solicitud</button>
-            <button class="tab-button" onclick="openTab('historial')">Historial</button>
-        </div>
-        <div id="solicitud" class="tab-content active">
-            <div class="header">
-                <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
-                <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
-                <div class="solicitud-box"><label for="no_solicitud">No. SOLICITUD</label><input type="text" id="no_solicitud"></div>
-            </div>
-            <h3 class="materials-title">MATERIALES</h3>
-            <table id="tabla-materiales">
-                <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <div class="actions">
-                <button id="btn-agregar">➕ Agregar Fila</button>
-                <button id="btn-guardar">💾 Guardar Solicitud</button>
-                <button id="btn-limpiar">📄 Limpiar Formulario</button>
-                <button id="btn-imprimir">🖨️ Imprimir</button>
-            </div>
-            <div class="date-section"><input type="text" id="fecha-input"></div>
-            <div class="signatures">
-                <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+<div class="app-container">
+
+    <!-- PESTAÑAS -->
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab('solicitud')">📋 Nueva Solicitud</button>
+        <button class="tab-button" onclick="openTab('historial')">📁 Historial</button>
+        <button class="tab-button" onclick="openTab('busqueda')">🔍 Buscar Material</button>
+        <button class="tab-button" onclick="openTab('consulta-ia')">🤖 Consulta IA</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PESTAÑA 1 — NUEVA SOLICITUD
+    ═══════════════════════════════════════════════ -->
+    <div id="solicitud" class="tab-content active">
+        <input type="hidden" id="editing-solicitud-id">
+
+        <div class="header">
+            <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
+            <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+            <div class="solicitud-box">
+                <label for="no_solicitud">No. SOLICITUD</label>
+                <input type="text" id="no_solicitud">
             </div>
         </div>
-        <div id="historial" class="tab-content">
-            <h2>Historial de Solicitudes</h2>
-            <div class="history-actions"><button id="btn-imprimir-historial">🖨️ Imprimir Historial Detallado</button></div>
-            <ul id="lista-solicitudes"></ul>
+
+        <h3 class="materials-title">MATERIALES</h3>
+        <table id="tabla-materiales">
+            <thead>
+                <tr>
+                    <th>ITEM</th>
+                    <th>CANTIDAD</th>
+                    <th>UNIDAD</th>
+                    <th>DETALLE</th>
+                    <th>OBS. (RUBRO)</th>
+                    <th># RUBRO</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="actions">
+            <button id="btn-agregar">➕ Agregar Fila</button>
+            <button id="btn-guardar">💾 Guardar Solicitud</button>
+            <button id="btn-limpiar">📄 Limpiar</button>
+            <button id="btn-imprimir">🖨️ Imprimir</button>
+        </div>
+
+        <div class="note-section">
+            <label for="nota-input">NOTA:</label>
+            <textarea id="nota-input" rows="3"></textarea>
+        </div>
+
+        <div class="date-section">
+            <input type="text" id="fecha-input">
+        </div>
+
+        <div class="signatures">
+            <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+            <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>RESIDENTE DE OBRA</div>
+            <div class="signature-block"><div class="line"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+            <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+        </div>
+
+        <div class="optional-signature" id="subcontratista-signature">
+            <div class="optional-signature-block">
+                <label>RECIBIDO:</label>
+                <div class="line" style="margin-top: 30px;"></div>
+                <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
+            </div>
         </div>
     </div>
 
-    <div id="print-historial-detallado"></div>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
-      authDomain: "solicitud-mat.firebaseapp.com",
-      projectId: "solicitud-mat",
-      storageBucket: "solicitud-mat.appspot.com",
-      messagingSenderId: "562521909209",
-      appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
+    <!-- ═══════════════════════════════════════════════
+         PESTAÑA 2 — HISTORIAL CON FILTROS
+    ═══════════════════════════════════════════════ -->
+    <div id="historial" class="tab-content">
+        <h2>Historial de Solicitudes</h2>
+
+        <!-- Panel de filtros -->
+        <div class="search-panel">
+            <h3>🔎 Filtrar solicitudes</h3>
+            <div class="search-grid">
+                <div class="search-field">
+                    <label>Material / Detalle</label>
+                    <input type="text" id="filtro-material" placeholder="ej: varilla, cemento...">
+                </div>
+                <div class="search-field">
+                    <label>N° de Solicitud</label>
+                    <input type="text" id="filtro-numero" placeholder="ej: 007">
+                </div>
+                <div class="search-field">
+                    <label>Rubro / Código</label>
+                    <input type="text" id="filtro-rubro" placeholder="ej: 10.05">
+                </div>
+                <div class="search-field">
+                    <label>Mes (en la fecha)</label>
+                    <select id="filtro-mes">
+                        <option value="">— Todos los meses —</option>
+                        <option>enero</option><option>febrero</option><option>marzo</option>
+                        <option>abril</option><option>mayo</option><option>junio</option>
+                        <option>julio</option><option>agosto</option><option>septiembre</option>
+                        <option>octubre</option><option>noviembre</option><option>diciembre</option>
+                    </select>
+                </div>
+                <div class="search-field">
+                    <label>Firma subcontratista</label>
+                    <select id="filtro-firma">
+                        <option value="">— Cualquier estado —</option>
+                        <option value="con">Con firma</option>
+                        <option value="sin">Sin firma</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button id="btn-buscar">Aplicar filtros</button>
+                <button id="btn-limpiar-filtros">Limpiar filtros</button>
+            </div>
+        </div>
+
+        <div id="search-summary"></div>
+
+        <div class="history-actions">
+            <button id="btn-imprimir-historial">🖨️ Imprimir historial detallado</button>
+            <button id="btn-exportar-csv">📊 Exportar CSV</button>
+        </div>
+
+        <ul id="lista-solicitudes"></ul>
+        <div id="sin-resultados">No se encontraron solicitudes con los filtros aplicados.</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PESTAÑA 3 — BÚSQUEDA AVANZADA DE MATERIALES
+    ═══════════════════════════════════════════════ -->
+    <div id="busqueda" class="tab-content">
+        <h2>Búsqueda por Material</h2>
+        <p style="font-size:13px;color:#555;">Escribe un material para ver en qué solicitudes aparece, la cantidad solicitada y el total acumulado.</p>
+
+        <div class="busqueda-panel">
+            <input type="text" id="material-input" placeholder="ej: varilla, cemento, alambre..."
+                   onkeydown="if(event.key==='Enter') buscarMaterial()">
+            <button id="btn-buscar-material" onclick="buscarMaterial()">Buscar</button>
+        </div>
+
+        <!-- Chips de criterio -->
+        <div class="chips-criterio">
+            <span class="chip active" data-criterio="detalle">Detalle del material</span>
+            <span class="chip"        data-criterio="obs">Observaciones / Rubro texto</span>
+            <span class="chip"        data-criterio="rubro">Código de rubro</span>
+            <span class="chip"        data-criterio="todo">Todos los campos</span>
+        </div>
+
+        <div id="resumen-material"></div>
+        <div id="resultados-busqueda"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PESTAÑA 4 — CONSULTA IA
+    ═══════════════════════════════════════════════ -->
+    <div id="consulta-ia" class="tab-content">
+        <h2>Consulta Rápida de Materiales 🤖</h2>
+        <p>Escribe tu consulta en lenguaje natural.<br>
+           Ejemplos: <em>"cantidad total de cemento"</em> · <em>"solicitudes con rubro 10.05"</em> · <em>"solicitud 007"</em> · <em>"materiales de junio"</em> · <em>"solicitudes con firma"</em></p>
+
+        <div class="ia-input-row">
+            <input type="text" id="consulta-input" placeholder="Escribe tu pregunta..."
+                   onkeydown="if(event.key==='Enter') ejecutarConsultaIA()">
+            <button id="btn-consultar" onclick="ejecutarConsultaIA()">Consultar</button>
+        </div>
+
+        <div id="historial-ia">
+            <div class="ia-burbuja respuesta">
+                <div class="ia-label">IA</div>
+                ¡Hola! Estoy lista para responder consultas sobre tus solicitudes guardadas.
+            </div>
+        </div>
+    </div>
+
+</div><!-- /app-container -->
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+/* =============================================
+   FIREBASE INIT
+============================================= */
+const firebaseConfig = {
+    apiKey: "AIzaSyCJP-JsxKpmT5IuJFGrBvD6vaUk8zCKMs",
+    authDomain: "solicitud-mat.firebaseapp.com",
+    projectId: "solicitud-mat",
+    storageBucket: "solicitud-mat.appspot.com",
+    messagingSenderId: "562521909209",
+    appId: "1:562521909209:web:a2d4f0ebac756d97eb1bc8"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* =============================================
+   ESTADO GLOBAL
+============================================= */
+let solicitudesCargadas = [];   // todas las solicitudes de Firestore
+let criterioActivo = 'detalle'; // chip seleccionado en búsqueda de material
+
+/* =============================================
+   REFERENCIAS DOM
+============================================= */
+const noSolicitudInput    = document.getElementById('no_solicitud');
+const fechaInput          = document.getElementById('fecha-input');
+const tablaCuerpo         = document.querySelector('#tabla-materiales tbody');
+const listaSolicitudesUI  = document.getElementById('lista-solicitudes');
+const editingSolicitudId  = document.getElementById('editing-solicitud-id');
+const btnGuardar          = document.getElementById('btn-guardar');
+const notaInput           = document.getElementById('nota-input');
+const consultaInput       = document.getElementById('consulta-input');
+const historialIA         = document.getElementById('historial-ia');
+
+/* =============================================
+   PESTAÑAS
+============================================= */
+function openTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+}
+
+/* =============================================
+   UTILIDADES
+============================================= */
+function obtenerValorSeguro(obj, key) {
+    if (!obj) return '';
+    if (obj[key]            !== undefined) return obj[key];
+    if (obj[key.toUpperCase()] !== undefined) return obj[key.toUpperCase()];
+    if (obj[key.toLowerCase()] !== undefined) return obj[key.toLowerCase()];
+    return '';
+}
+
+function ajustarAlturaTextarea(t) {
+    if (t) { t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+}
+
+function resaltarTexto(texto, termino) {
+    if (!termino || !texto) return texto || '';
+    const re = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return String(texto).replace(re, '<span class="highlight">$1</span>');
+}
+
+/* =============================================
+   FORMULARIO — NUEVA SOLICITUD
+============================================= */
+function limpiarFormulario() {
+    noSolicitudInput.value = '';
+    editingSolicitudId.value = '';
+    btnGuardar.textContent = '💾 Guardar Solicitud';
+    establecerFecha();
+    tablaCuerpo.innerHTML = '';
+    notaInput.value = '';
+    document.getElementById('subcontratista-signature').style.display = 'none';
+    for (let i = 0; i < 5; i++) agregarFila();
+}
+
+function renumerarItems() {
+    tablaCuerpo.querySelectorAll('tr').forEach((fila, idx) => {
+        fila.querySelector('.item-column').textContent = idx + 1;
+    });
+}
+
+function agregarFila(item = null) {
+    const fila = document.createElement('tr');
+    fila.innerHTML = `
+        <td class="item-column">${tablaCuerpo.rows.length + 1}</td>
+        <td><textarea rows="1"></textarea></td>
+        <td><textarea rows="1"></textarea></td>
+        <td><textarea rows="1"></textarea></td>
+        <td><textarea rows="1"></textarea></td>
+        <td><textarea rows="1"></textarea></td>
+        <td><button class="btn-eliminar-fila">🗑️</button></td>`;
+    tablaCuerpo.appendChild(fila);
+
+    const ta = fila.querySelectorAll('textarea');
+    if (item) {
+        ta[0].value = obtenerValorSeguro(item, 'cantidad');
+        ta[1].value = obtenerValorSeguro(item, 'unidad');
+        ta[2].value = obtenerValorSeguro(item, 'detalle');
+        ta[3].value = obtenerValorSeguro(item, 'obs');
+        ta[4].value = obtenerValorSeguro(item, 'rubro');
+    }
+    setTimeout(() => ta.forEach(ajustarAlturaTextarea), 50);
+}
+
+function establecerFecha() {
+    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const d = new Date();
+    fechaInput.value = `Pasaje, ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+
+/* =============================================
+   FIREBASE — SERVICIO DB
+============================================= */
+const dbService = {
+    async saveSolicitud(id, data) {
+        if (id) return db.collection("solicitudes").doc(id).update(data);
+        data.creadoEn = firebase.firestore.FieldValue.serverTimestamp();
+        return db.collection("solicitudes").add(data);
+    },
+    async deleteSolicitud(id) {
+        return db.collection("solicitudes").doc(id).delete();
+    },
+    setupRealtimeListener(callback) {
+        return db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot(callback);
+    }
+};
+
+/* =============================================
+   GUARDAR SOLICITUD
+============================================= */
+async function guardarSolicitud() {
+    const agregarSubcontratista = confirm('¿Desea agregar la firma del Subcontratista (SR. JAIME ORTEGA GONZALEZ) a esta solicitud?');
+
+    const items = [];
+    tablaCuerpo.querySelectorAll('tr').forEach(fila => {
+        const ta = fila.querySelectorAll('textarea');
+        if (ta.length >= 5 && (ta[0].value.trim() || ta[2].value.trim())) {
+            items.push({
+                cantidad: ta[0].value,
+                unidad:   ta[1].value,
+                detalle:  ta[2].value,
+                obs:      ta[3].value,
+                rubro:    ta[4].value
+            });
+        }
+    });
+
+    const data = {
+        numero:              noSolicitudInput.value || 'N/A',
+        fecha:               fechaInput.value,
+        items,
+        nota:                notaInput.value,
+        firmaSubcontratista: agregarSubcontratista
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    // ***** CAMBIO AQUÍ: Variable para guardar los datos del historial *****
-    let solicitudesCargadas = [];
+    const id = editingSolicitudId.value;
+    try {
+        await dbService.saveSolicitud(id, data);
+        alert(`¡Solicitud ${id ? 'actualizada' : 'guardada'} con éxito en la nube!`);
+        limpiarFormulario();
+        if (id) openTab('historial');
+    } catch (err) {
+        console.error(err);
+        alert('Error al guardar. Revisa la consola.');
+    }
+}
 
-    const noSolicitudInput = document.getElementById('no_solicitud');
-    const fechaInput = document.getElementById('fecha-input');
-    const tablaCuerpo = document.querySelector('#tabla-materiales tbody');
-    const listaSolicitudesUI = document.getElementById('lista-solicitudes');
-    
-    function openTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+/* =============================================
+   ESCUCHA EN TIEMPO REAL — HISTORIAL
+============================================= */
+function mostrarSolicitudesGuardadas() {
+    dbService.setupRealtimeListener(snapshot => {
+        solicitudesCargadas = [];
+        snapshot.forEach(doc => {
+            const s = doc.data();
+            s.id = doc.id;
+            solicitudesCargadas.push(s);
+        });
+        renderizarHistorial(solicitudesCargadas);
+    });
+}
+
+/* =============================================
+   RENDERIZAR HISTORIAL (con resaltado opcional)
+============================================= */
+function renderizarHistorial(lista, termino = '') {
+    listaSolicitudesUI.innerHTML = '';
+    const sinResultados = document.getElementById('sin-resultados');
+
+    if (lista.length === 0) {
+        sinResultados.style.display = 'block';
+        return;
     }
-    function ajustarAlturaTextarea(textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${textarea.scrollHeight}px`;
+    sinResultados.style.display = 'none';
+
+    lista.forEach(solicitud => {
+        const li = document.createElement('li');
+
+        // Items filtrados a mostrar en el detalle
+        const itemsAMostrar = solicitud.items || [];
+
+        // Badge firma
+        const badgeFirma = solicitud.firmaSubcontratista
+            ? '<span class="badge-firma">✔ Con firma</span>' : '';
+
+        // Número resaltado
+        const numDisplay = termino
+            ? resaltarTexto(solicitud.numero, termino)
+            : (solicitud.numero || 'N/A');
+
+        li.innerHTML = `
+            <div class="info-solicitud">
+                <strong>N° ${numDisplay}</strong>${badgeFirma}
+                &nbsp;—&nbsp; ${solicitud.fecha || ''}
+                &nbsp;·&nbsp; <span style="color:#555;font-size:12px;">${itemsAMostrar.length} líneas de material</span>
+            </div>
+            <div>
+                <button class="btn-ver"     data-id="${solicitud.id}">👁️ Ver</button>
+                <button class="btn-cargar"  data-id="${solicitud.id}">✏️ Editar</button>
+                <button class="btn-eliminar" data-id="${solicitud.id}">🗑️ Eliminar</button>
+            </div>
+            <div class="detalle-solicitud" id="det-${solicitud.id}">
+                ${construirTablaDetalle(itemsAMostrar, termino)}
+                ${solicitud.nota ? `<div class="nota-detalle"><strong>Nota:</strong> ${solicitud.nota}</div>` : ''}
+            </div>`;
+
+        listaSolicitudesUI.appendChild(li);
+    });
+}
+
+function construirTablaDetalle(items, termino = '') {
+    if (!items || items.length === 0) return '<p style="font-size:12px;color:#888;">Sin materiales registrados.</p>';
+
+    let rows = items.map((item, i) => {
+        const det  = termino ? resaltarTexto(obtenerValorSeguro(item,'detalle'), termino) : obtenerValorSeguro(item,'detalle');
+        const obs  = termino ? resaltarTexto(obtenerValorSeguro(item,'obs'),    termino) : obtenerValorSeguro(item,'obs');
+        const rub  = termino ? resaltarTexto(obtenerValorSeguro(item,'rubro'),  termino) : obtenerValorSeguro(item,'rubro');
+        return `<tr>
+            <td>${i+1}</td>
+            <td>${obtenerValorSeguro(item,'cantidad')}</td>
+            <td>${obtenerValorSeguro(item,'unidad')}</td>
+            <td style="text-align:left">${det}</td>
+            <td style="text-align:left">${obs}</td>
+            <td>${rub}</td>
+        </tr>`;
+    }).join('');
+
+    return `<table>
+        <thead><tr>
+            <th style="width:5%">Item</th>
+            <th style="width:9%">Cant.</th>
+            <th style="width:9%">Unid.</th>
+            <th style="width:37%">Detalle</th>
+            <th style="width:25%">Obs.</th>
+            <th style="width:15%">Rubro</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* =============================================
+   FILTROS DEL HISTORIAL
+============================================= */
+function aplicarFiltros() {
+    const mat   = document.getElementById('filtro-material').value.trim().toLowerCase();
+    const num   = document.getElementById('filtro-numero').value.trim().toLowerCase();
+    const rub   = document.getElementById('filtro-rubro').value.trim().toLowerCase();
+    const mes   = document.getElementById('filtro-mes').value.toLowerCase();
+    const firma = document.getElementById('filtro-firma').value;
+
+    let resultado = solicitudesCargadas.filter(s => {
+        // Filtro número
+        if (num && !(s.numero || '').toLowerCase().includes(num)) return false;
+        // Filtro mes
+        if (mes && !(s.fecha || '').toLowerCase().includes(mes)) return false;
+        // Filtro firma
+        if (firma === 'con' && !s.firmaSubcontratista) return false;
+        if (firma === 'sin' && s.firmaSubcontratista)  return false;
+        // Filtro rubro
+        if (rub) {
+            const tieneRub = (s.items || []).some(item =>
+                obtenerValorSeguro(item,'rubro').toLowerCase().includes(rub)
+            );
+            if (!tieneRub) return false;
+        }
+        // Filtro material
+        if (mat) {
+            const tieneMat = (s.items || []).some(item =>
+                obtenerValorSeguro(item,'detalle').toLowerCase().includes(mat) ||
+                obtenerValorSeguro(item,'obs').toLowerCase().includes(mat)
+            );
+            if (!tieneMat) return false;
+        }
+        return true;
+    });
+
+    // Resumen
+    const sumEl = document.getElementById('search-summary');
+    const hayFiltro = mat || num || rub || mes || firma;
+    if (hayFiltro) {
+        sumEl.style.display = 'block';
+        sumEl.textContent = `Mostrando ${resultado.length} de ${solicitudesCargadas.length} solicitudes con los filtros aplicados.`;
+    } else {
+        sumEl.style.display = 'none';
     }
-    function limpiarFormulario() {
-        noSolicitudInput.value = '';
-        establecerFecha();
-        tablaCuerpo.innerHTML = '';
+
+    renderizarHistorial(resultado, mat || rub || '');
+}
+
+function limpiarFiltros() {
+    ['filtro-material','filtro-numero','filtro-rubro'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('filtro-mes').value = '';
+    document.getElementById('filtro-firma').value = '';
+    document.getElementById('search-summary').style.display = 'none';
+    renderizarHistorial(solicitudesCargadas);
+}
+
+/* =============================================
+   VER DETALLE (expandible) / CARGAR / ELIMINAR
+============================================= */
+function toggleDetalle(id) {
+    const det = document.getElementById(`det-${id}`);
+    if (det) det.classList.toggle('visible');
+}
+
+function cargarSolicitud(id) {
+    const s = solicitudesCargadas.find(x => x.id === id);
+    if (!s) { alert('No se encontró la solicitud.'); return; }
+
+    noSolicitudInput.value    = s.numero || '';
+    fechaInput.value          = s.fecha  || '';
+    editingSolicitudId.value  = id;
+    btnGuardar.textContent    = '💾 Guardar Cambios';
+    notaInput.value           = s.nota   || '';
+
+    document.getElementById('subcontratista-signature').style.display =
+        s.firmaSubcontratista ? 'block' : 'none';
+
+    tablaCuerpo.innerHTML = '';
+    if (s.items && s.items.length > 0) {
+        s.items.forEach(item => agregarFila(item));
+    } else {
         for (let i = 0; i < 5; i++) agregarFila();
     }
-    function agregarFila(item = { cantidad: '', unidad: '', detalle: '', obs: '', rubro: '' }) {
-        const fila = document.createElement('tr');
-        const itemCount = tablaCuerpo.rows.length + 1;
-        fila.innerHTML = `<td class="item-column">${itemCount}</td><td><textarea rows="1">${item.cantidad}</textarea></td><td><textarea rows="1">${item.unidad}</textarea></td><td><textarea rows="1">${item.detalle}</textarea></td><td><textarea rows="1">${item.obs}</textarea></td><td><textarea rows="1">${item.rubro}</textarea></td>`;
-        tablaCuerpo.appendChild(fila);
-    }
-    function establecerFecha() {
-        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-        const fecha = new Date();
-        const fechaFormateada = `Pasaje, ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
-        fechaInput.value = fechaFormateada;
-    }
-    function guardarSolicitud() {
-        const items = [];
-        tablaCuerpo.querySelectorAll('tr').forEach(fila => {
-            const textareas = fila.querySelectorAll('textarea');
-            items.push({ cantidad: textareas[0].value, unidad: textareas[1].value, detalle: textareas[2].value, obs: textareas[3].value, rubro: textareas[4].value });
-        });
-        const solicitud = {
-            creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
-            numero: noSolicitudInput.value || 'N/A',
-            fecha: fechaInput.value,
-            items: items
-        };
-        db.collection("solicitudes").add(solicitud)
-            .then(() => {
-                alert('¡Solicitud guardada con éxito en la nube!');
-                limpiarFormulario();
-            })
-            .catch((error) => console.error("Error al guardar: ", error));
-    }
-    
-    function mostrarSolicitudesGuardadas() {
-        db.collection("solicitudes").orderBy("creadoEn", "desc").onSnapshot((querySnapshot) => {
-            solicitudesCargadas = []; // Limpiamos antes de llenar
-            listaSolicitudesUI.innerHTML = '';
-            querySnapshot.forEach((doc) => {
-                const solicitud = doc.data();
-                solicitud.id = doc.id; // Añadimos el id al objeto
-                solicitudesCargadas.push(solicitud); // Guardamos la data en nuestra variable
-                
-                const li = document.createElement('li');
-                li.innerHTML = `<span><strong>N°:</strong> ${solicitud.numero} - <strong>Fecha:</strong> ${solicitud.fecha}</span><div><button class="btn-cargar" data-id="${doc.id}">Cargar</button><button class="btn-eliminar" data-id="${doc.id}">Eliminar</button></div>`;
-                listaSolicitudesUI.appendChild(li);
-            });
+    openTab('solicitud');
+}
+
+function eliminarSolicitud(id) {
+    if (confirm('¿Confirma la eliminación permanente de esta solicitud?')) {
+        dbService.deleteSolicitud(id).catch(err => {
+            console.error(err);
+            alert('Error al eliminar. Revisa la consola.');
         });
     }
+}
 
-    function cargarSolicitud(id) {
-        const solicitudACargar = solicitudesCargadas.find(s => s.id === id);
-        if (solicitudACargar) {
-            noSolicitudInput.value = solicitudACargar.numero;
-            fechaInput.value = solicitudACargar.fecha;
-            tablaCuerpo.innerHTML = '';
-            solicitudACargar.items.forEach(item => agregarFila(item));
-            setTimeout(() => {
-                tablaCuerpo.querySelectorAll('textarea').forEach(ajustarAlturaTextarea);
-            }, 0);
-            openTab('solicitud');
-        } else {
-            alert("No se encontró la solicitud.");
-        }
+/* =============================================
+   BÚSQUEDA AVANZADA DE MATERIALES (pestaña 3)
+============================================= */
+function buscarMaterial() {
+    const termino   = document.getElementById('material-input').value.trim().toLowerCase();
+    const resumenEl = document.getElementById('resumen-material');
+    const resultEl  = document.getElementById('resultados-busqueda');
+
+    if (!termino) {
+        resumenEl.style.display = 'none';
+        resultEl.innerHTML = '<p style="color:#888;font-size:13px;">Ingresa un material para buscar.</p>';
+        return;
     }
 
-    function eliminarSolicitud(id) {
-        db.collection("solicitudes").doc(id).delete()
-            .catch(error => console.error("Error al eliminar: ", error));
+    if (solicitudesCargadas.length === 0) {
+        resumenEl.style.display = 'none';
+        resultEl.innerHTML = '<p style="color:#888;font-size:13px;">No hay solicitudes guardadas.</p>';
+        return;
     }
-    
-    tablaCuerpo.addEventListener('input', e => {
-        if (e.target.tagName.toLowerCase() === 'textarea') {
-            ajustarAlturaTextarea(e.target);
-        }
-    });
 
-    tablaCuerpo.addEventListener('blur', (e) => {
-        if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
-            const textarea = e.target;
-            const valor = parseFloat(textarea.value);
-            if (!isNaN(valor)) {
-                textarea.value = valor.toFixed(2);
+    // Búsqueda según criterio activo
+    const resultados = [];
+    let totalCantidad = 0;
+    const unidadesMap = {};
+
+    solicitudesCargadas.forEach(s => {
+        const itemsMatch = (s.items || []).filter(item => {
+            switch (criterioActivo) {
+                case 'detalle': return obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino);
+                case 'obs':     return obtenerValorSeguro(item,'obs').toLowerCase().includes(termino);
+                case 'rubro':   return obtenerValorSeguro(item,'rubro').toLowerCase().includes(termino);
+                case 'todo':
+                default:
+                    return obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino) ||
+                           obtenerValorSeguro(item,'obs').toLowerCase().includes(termino)     ||
+                           obtenerValorSeguro(item,'rubro').toLowerCase().includes(termino);
             }
-        }
-    }, true);
-    
-    // ***** CAMBIO AQUÍ: Lógica para el botón de imprimir historial detallado *****
-    document.getElementById('btn-imprimir-historial').addEventListener('click', () => {
-        const printContainer = document.getElementById('print-historial-detallado');
-        printContainer.innerHTML = ''; // Limpia el contenedor
-
-        // Recorremos las solicitudes guardadas y creamos una vista de formulario para cada una
-        solicitudesCargadas.forEach(solicitud => {
-            let itemsHtml = '';
-            solicitud.items.forEach((item, index) => {
-                itemsHtml += `
-                    <tr>
-                        <td class="item-column">${index + 1}</td>
-                        <td>${item.cantidad}</td>
-                        <td>${item.unidad}</td>
-                        <td>${item.detalle}</td>
-                        <td>${item.obs}</td>
-                        <td>${item.rubro}</td>
-                    </tr>
-                `;
-            });
-
-            const solicitudHtml = `
-                <div class="solicitud-impresa">
-                    <div class="header">
-                        <div class="header-logo"><img src="IMG-20250724-WA0025.jpg" alt="Logo"></div>
-                        <div class="header-title">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
-                        <div class="solicitud-box"><label>No. SOLICITUD</label><div>${solicitud.numero}</div></div>
-                    </div>
-                    <h3 class="materials-title">MATERIALES</h3>
-                    <table>
-                        <thead><tr><th style="width: 5%;">ITEM</th><th style="width: 10%;">CANTIDAD</th><th style="width: 10%;">UNIDAD</th><th style="width: 30%;">DETALLE DE ELEMENTOS</th><th style="width: 30%;">OBS.</th><th style="width: 15%;"># DE RUBRO</th></tr></thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-                    <div class="date-section"><strong>${solicitud.fecha}</strong></div>
-                    <div class="signatures">
-                        <div class="signature-block"><div class="line"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
-                        <div class="signature-block"><div class="line"></div><strong>ING. JOSE MACAS P.</strong><br>TECNICO</div>
-                        <div class="signature-block"><div class="line"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
-                    </div>
-                </div>
-            `;
-            printContainer.innerHTML += solicitudHtml;
         });
 
-        document.body.classList.add('printing-historial');
-        window.print();
-    });
-
-    // Event listeners generales
-    document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
-    document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
-    document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
-    document.getElementById('btn-imprimir').addEventListener('click', () => {
-        document.body.classList.remove('printing-historial');
-        window.print();
-    });
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('printing-historial');
-    });
-    listaSolicitudesUI.addEventListener('click', (e) => {
-        const id = e.target.getAttribute('data-id');
-        if (e.target.classList.contains('btn-cargar')) cargarSolicitud(id);
-        if (e.target.classList.contains('btn-eliminar')) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) eliminarSolicitud(id);
+        if (itemsMatch.length > 0) {
+            // Sumar cantidades
+            itemsMatch.forEach(item => {
+                const cant = parseFloat(String(obtenerValorSeguro(item,'cantidad')).replace(',','.'));
+                const uni  = obtenerValorSeguro(item,'unidad') || 'u';
+                if (!isNaN(cant)) {
+                    totalCantidad += cant;
+                    unidadesMap[uni] = (unidadesMap[uni] || 0) + cant;
+                }
+            });
+            resultados.push({ solicitud: s, items: itemsMatch });
         }
     });
-    document.addEventListener('DOMContentLoaded', () => {
-        limpiarFormulario();
-        mostrarSolicitudesGuardadas();
-        openTab('solicitud'); 
+
+    if (resultados.length === 0) {
+        resumenEl.style.display = 'none';
+        resultEl.innerHTML = `<p style="color:#888;font-size:13px;">No se encontró "<strong>${termino}</strong>" en ninguna solicitud.</p>`;
+        return;
+    }
+
+    // Resumen total
+    const unidadesStr = Object.entries(unidadesMap)
+        .map(([u, v]) => `${v.toFixed(2)} ${u}`)
+        .join(' · ');
+    resumenEl.style.display = 'block';
+    resumenEl.innerHTML = `
+        Resultados para <strong>"${termino}"</strong>:
+        encontrado en <strong>${resultados.length}</strong> solicitud(es).
+        Total acumulado: <strong>${unidadesStr || totalCantidad.toFixed(2)}</strong>`;
+
+    // Tarjetas por solicitud
+    resultEl.innerHTML = resultados.map(({ solicitud, items }) => {
+        const rows = items.map((item, i) => {
+            const det = resaltarTexto(obtenerValorSeguro(item,'detalle'), termino);
+            const obs = resaltarTexto(obtenerValorSeguro(item,'obs'),    termino);
+            const rub = resaltarTexto(obtenerValorSeguro(item,'rubro'),  termino);
+            return `<tr>
+                <td>${i+1}</td>
+                <td>${obtenerValorSeguro(item,'cantidad')}</td>
+                <td>${obtenerValorSeguro(item,'unidad')}</td>
+                <td style="text-align:left">${det}</td>
+                <td style="text-align:left">${obs}</td>
+                <td>${rub}</td>
+            </tr>`;
+        }).join('');
+
+        return `<div class="resultado-card">
+            <div class="resultado-card-header">
+                <strong>N° ${solicitud.numero || 'N/A'}</strong>
+                <span>📅 ${solicitud.fecha || ''}</span>
+                <span>${items.length} material(es) encontrado(s)</span>
+                ${solicitud.firmaSubcontratista ? '<span style="color:#28a745">✔ Con firma</span>' : ''}
+            </div>
+            <table>
+                <thead><tr>
+                    <th style="width:5%">Item</th>
+                    <th style="width:9%">Cant.</th>
+                    <th style="width:9%">Unid.</th>
+                    <th style="width:37%">Detalle</th>
+                    <th style="width:25%">Obs.</th>
+                    <th style="width:15%">Rubro</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    }).join('');
+}
+
+// Chips de criterio
+document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        criterioActivo = this.dataset.criterio;
+        if (document.getElementById('material-input').value.trim()) buscarMaterial();
     });
-    </script>
+});
+
+/* =============================================
+   EXPORTAR CSV
+============================================= */
+function exportarCSV() {
+    if (solicitudesCargadas.length === 0) {
+        alert('No hay solicitudes para exportar.');
+        return;
+    }
+
+    // Filtrar las actualmente visibles (re-aplica filtros)
+    const mat   = document.getElementById('filtro-material').value.trim().toLowerCase();
+    const num   = document.getElementById('filtro-numero').value.trim().toLowerCase();
+    const rub   = document.getElementById('filtro-rubro').value.trim().toLowerCase();
+    const mes   = document.getElementById('filtro-mes').value.toLowerCase();
+    const firma = document.getElementById('filtro-firma').value;
+
+    let lista = solicitudesCargadas.filter(s => {
+        if (num && !(s.numero||'').toLowerCase().includes(num)) return false;
+        if (mes && !(s.fecha||'').toLowerCase().includes(mes)) return false;
+        if (firma === 'con' && !s.firmaSubcontratista) return false;
+        if (firma === 'sin' && s.firmaSubcontratista)  return false;
+        if (rub) {
+            const ok = (s.items||[]).some(i => obtenerValorSeguro(i,'rubro').toLowerCase().includes(rub));
+            if (!ok) return false;
+        }
+        if (mat) {
+            const ok = (s.items||[]).some(i =>
+                obtenerValorSeguro(i,'detalle').toLowerCase().includes(mat) ||
+                obtenerValorSeguro(i,'obs').toLowerCase().includes(mat)
+            );
+            if (!ok) return false;
+        }
+        return true;
+    });
+
+    let csv = '\uFEFF'; // BOM para Excel
+    csv += 'N° Solicitud,Fecha,Item,Cantidad,Unidad,Detalle,Observación,Rubro,Firma Subcontratista\n';
+
+    lista.forEach(s => {
+        const firma = s.firmaSubcontratista ? 'Sí' : 'No';
+        (s.items || []).forEach((item, idx) => {
+            const esc = v => `"${String(v || '').replace(/"/g, '""')}"`;
+            csv += [
+                esc(s.numero),
+                esc(s.fecha),
+                idx + 1,
+                esc(obtenerValorSeguro(item,'cantidad')),
+                esc(obtenerValorSeguro(item,'unidad')),
+                esc(obtenerValorSeguro(item,'detalle')),
+                esc(obtenerValorSeguro(item,'obs')),
+                esc(obtenerValorSeguro(item,'rubro')),
+                esc(firma)
+            ].join(',') + '\n';
+        });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `solicitudes_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/* =============================================
+   CONSULTA IA — CON HISTORIAL DE CONVERSACIÓN
+============================================= */
+function ejecutarConsultaIA() {
+    const query = consultaInput.value.trim();
+    if (!query) return;
+
+    // Agregar burbuja de pregunta
+    agregarBurbujaIA('pregunta', query);
+    consultaInput.value = '';
+
+    let respuesta;
+    const q = query.toLowerCase();
+
+    if (solicitudesCargadas.length === 0) {
+        respuesta = 'Aún no hay solicitudes guardadas para analizar.';
+    } else if (q.includes('total') || q.includes('cantidad')) {
+        respuesta = analizarCantidadTotal(q);
+    } else if (q.includes('rubro') || q.includes('código')) {
+        respuesta = analizarPorRubro(q);
+    } else if ((q.includes('solicitud') || q.includes('número')) && q.match(/\d+/)) {
+        respuesta = analizarPorNumero(q);
+    } else if (q.includes('mes') || q.includes('fecha')) {
+        respuesta = analizarPorTiempo(q);
+    } else if (q.includes('firma') || q.includes('subcontratista') || q.includes('aprobada')) {
+        respuesta = analizarPorFirma();
+    } else if (q.includes('cuántas') || q.includes('cuantas') || q.includes('solicitudes')) {
+        const n = solicitudesCargadas.length;
+        const totalLineas = solicitudesCargadas.reduce((s, x) => s + (x.items||[]).length, 0);
+        respuesta = `Hay <strong>${n}</strong> solicitud(es) guardada(s) con un total de <strong>${totalLineas}</strong> líneas de material.`;
+    } else {
+        respuesta = analizarPorTexto(q);
+        if (!respuesta) {
+            respuesta = `No entiendo la consulta. Prueba con:<br>
+            · <em>"cantidad total de [material]"</em><br>
+            · <em>"rubro [código]"</em><br>
+            · <em>"solicitud [número]"</em><br>
+            · <em>"materiales de [mes]"</em><br>
+            · <em>"solicitudes con firma"</em>`;
+        }
+    }
+
+    agregarBurbujaIA('respuesta', respuesta);
+}
+
+function agregarBurbujaIA(tipo, texto) {
+    const div = document.createElement('div');
+    div.className = `ia-burbuja ${tipo}`;
+    div.innerHTML = `<div class="ia-label">${tipo === 'pregunta' ? 'Tú' : 'IA'}</div>${texto}`;
+    // Insertar al principio (column-reverse lo muestra abajo)
+    historialIA.insertBefore(div, historialIA.firstChild);
+}
+
+/* ─── FUNCIONES DE ANÁLISIS IA ─── */
+
+function analizarCantidadTotal(q) {
+    const stopWords = ['total','cantidad','de','el','la','un','una','es','se','cuanto','pedir','hay','dame'];
+    const palabras  = q.split(' ').filter(p => p.length > 2 && !stopWords.includes(p));
+    if (!palabras.length) return 'Especifica el material. Ej: <em>"cantidad total de cemento"</em>.';
+
+    const termino = palabras[0];
+    const unidadesMap = {};
+    const solicitudesConMaterial = [];
+
+    solicitudesCargadas.forEach(s => {
+        const itemsMatch = (s.items || []).filter(item =>
+            obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino)
+        );
+        if (itemsMatch.length) {
+            solicitudesConMaterial.push(s.numero || 'N/A');
+            itemsMatch.forEach(item => {
+                const cant = parseFloat(String(obtenerValorSeguro(item,'cantidad')).replace(',','.'));
+                const uni  = obtenerValorSeguro(item,'unidad') || 'u';
+                if (!isNaN(cant)) unidadesMap[uni] = (unidadesMap[uni] || 0) + cant;
+            });
+        }
+    });
+
+    if (!Object.keys(unidadesMap).length) {
+        return `No se encontró el material <strong>"${termino}"</strong> en ninguna solicitud.`;
+    }
+    const totalStr = Object.entries(unidadesMap).map(([u,v]) => `${v.toFixed(2)} ${u}`).join(', ');
+    return `<strong>"${termino.toUpperCase()}"</strong> — Total: <strong>${totalStr}</strong><br>
+            Presente en solicitudes: ${solicitudesConMaterial.join(', ')}`;
+}
+
+function analizarPorRubro(q) {
+    const match = q.match(/rubro\s*([\d.]+)/) || q.match(/código\s*([\d.]+)/);
+    if (!match) return 'Especifica el código. Ej: <em>"rubro 10.05"</em>.';
+
+    const rubroBuscado = match[1].trim();
+    const encontradas  = [];
+
+    solicitudesCargadas.forEach(s => {
+        const items = (s.items || []).filter(i => obtenerValorSeguro(i,'rubro').includes(rubroBuscado));
+        if (items.length) {
+            encontradas.push({
+                numero: s.numero,
+                fecha:  s.fecha,
+                items:  items.map(i => `${obtenerValorSeguro(i,'cantidad')} ${obtenerValorSeguro(i,'unidad')} de ${obtenerValorSeguro(i,'detalle')}`)
+            });
+        }
+    });
+
+    if (!encontradas.length) return `No hay materiales bajo el Rubro <strong>${rubroBuscado}</strong>.`;
+    let r = `Rubro <strong>${rubroBuscado}</strong> encontrado en <strong>${encontradas.length}</strong> solicitud(es):<br>`;
+    encontradas.forEach(s => {
+        r += `<br><strong>N° ${s.numero}</strong> (${s.fecha}):<br>· ${s.items.join('<br>· ')}`;
+    });
+    return r;
+}
+
+function analizarPorNumero(q) {
+    const match = q.match(/(\d+)/);
+    if (!match) return 'Especifica el número. Ej: <em>"solicitud 007"</em>.';
+
+    const num = match[0];
+    const s   = solicitudesCargadas.find(x => (x.numero || '').includes(num));
+    if (!s) return `No se encontró la solicitud N° <strong>${num}</strong>.`;
+
+    let r = `<strong>Solicitud N° ${s.numero}</strong> — ${s.fecha}<br>`;
+    r += `· Firma subcontratista: <strong>${s.firmaSubcontratista ? 'SÍ' : 'NO'}</strong><br>`;
+    if (s.nota) r += `· Nota: ${s.nota}<br>`;
+    r += `· Materiales (<strong>${(s.items||[]).length}</strong> líneas):<br>`;
+    (s.items || []).forEach(item => {
+        r += `&nbsp;&nbsp;${obtenerValorSeguro(item,'cantidad')} ${obtenerValorSeguro(item,'unidad')} — ${obtenerValorSeguro(item,'detalle')} (Rubro: ${obtenerValorSeguro(item,'rubro')})<br>`;
+    });
+    return r;
+}
+
+function analizarPorTiempo(q) {
+    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const mes   = meses.find(m => q.includes(m));
+    if (!mes) return 'Especifica un mes. Ej: <em>"materiales de junio"</em>.';
+
+    const lista = solicitudesCargadas.filter(s => (s.fecha||'').toLowerCase().includes(mes));
+    if (!lista.length) return `No hay solicitudes en <strong>${mes}</strong>.`;
+
+    const totalLineas = lista.reduce((s, x) => s + (x.items||[]).length, 0);
+    return `En <strong>${mes.toUpperCase()}</strong>: <strong>${lista.length}</strong> solicitud(es) con <strong>${totalLineas}</strong> líneas de material.<br>
+            N° de solicitudes: ${lista.map(s => s.numero || 'N/A').join(', ')}`;
+}
+
+function analizarPorFirma() {
+    const con = solicitudesCargadas.filter(s => s.firmaSubcontratista);
+    const sin = solicitudesCargadas.filter(s => !s.firmaSubcontratista);
+    return `<strong>Estado de firma — SR. JAIME ORTEGA GONZALEZ</strong><br>
+            · Con firma: <strong>${con.length}</strong> solicitud(es) ${con.length ? `(${con.map(s=>s.numero||'N/A').join(', ')})` : ''}<br>
+            · Sin firma: <strong>${sin.length}</strong> solicitud(es)`;
+}
+
+function analizarPorTexto(q) {
+    const stop = ['la','para','el','de','qué','en','hay','nota','área','zona','buscar','que','con','una','uno'];
+    const terminos = q.split(' ').filter(p => p.length > 2 && !stop.includes(p));
+    if (!terminos.length) return null;
+
+    const termino = terminos[0];
+    const encontradas = [];
+
+    solicitudesCargadas.forEach(s => {
+        const items = (s.items || []).filter(item =>
+            obtenerValorSeguro(item,'obs').toLowerCase().includes(termino) ||
+            obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino)
+        );
+        const enNota = s.nota && s.nota.toLowerCase().includes(termino);
+        if (items.length || enNota) {
+            encontradas.push({ numero: s.numero, fecha: s.fecha, items, enNota, nota: s.nota });
+        }
+    });
+
+    if (!encontradas.length) return `No hay coincidencias para <strong>"${termino}"</strong>.`;
+    let r = `Coincidencias para <strong>"${termino}"</strong> en <strong>${encontradas.length}</strong> solicitud(es):<br>`;
+    encontradas.forEach(s => {
+        r += `<br><strong>N° ${s.numero}</strong> (${s.fecha}):`;
+        if (s.enNota) r += ` nota general coincide.`;
+        if (s.items.length) r += ` ${s.items.length} material(es) coincide(n).`;
+    });
+    return r;
+}
+
+/* =============================================
+   IMPRIMIR HISTORIAL DETALLADO
+============================================= */
+function imprimirHistorial() {
+    let contentHtml = '';
+    solicitudesCargadas.forEach(s => {
+        const items = s.items || [];
+        const itemsHtml = items.map((item, i) => `<tr>
+            <td>${i+1}</td>
+            <td style="text-align:center">${obtenerValorSeguro(item,'cantidad')}</td>
+            <td style="text-align:center">${obtenerValorSeguro(item,'unidad')}</td>
+            <td style="text-align:left">${obtenerValorSeguro(item,'detalle')}</td>
+            <td style="text-align:left">${obtenerValorSeguro(item,'obs')}</td>
+            <td style="text-align:center">${obtenerValorSeguro(item,'rubro')}</td>
+        </tr>`).join('');
+
+        const notaHtml = s.nota
+            ? `<div style="margin-top:10px;"><strong style="color:#004a99">NOTA:</strong>
+               <p style="margin:0;padding:5px;border:1px solid #ccc;border-radius:4px">${s.nota.replace(/\n/g,'<br>')}</p></div>`
+            : '';
+
+        const subHtml = s.firmaSubcontratista ? `
+            <div style="margin-top:70px;text-align:center">
+                <div style="display:inline-block;width:300px;text-align:center">
+                    <strong>RECIBIDO:</strong>
+                    <div style="border-top:1px solid #333;margin-top:30px;margin-bottom:5px"></div>
+                    <strong>SR. JAIME ORTEGA GONZALEZ</strong><br>SUBCONTRATISTA
+                </div>
+            </div>` : '';
+
+        contentHtml += `<div style="padding:20px;page-break-after:always;border:1px solid #ddd;margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #004a99;padding-bottom:10px;margin-bottom:10px">
+                <div><img src="IMG-20250724-WA0025.jpg" style="width:160px;height:auto"></div>
+                <div style="text-align:center;font-weight:bold;font-size:1.3em;color:#004a99;flex-grow:1">SOLICITUD DE MATERIALES Y SUMINISTROS A BODEGA</div>
+                <div style="border:1px solid #333;padding:6px 10px;text-align:center">
+                    <div style="font-weight:bold;font-size:11px">N° SOLICITUD</div>
+                    <div style="font-weight:bold">${s.numero || 'N/A'}</div>
+                </div>
+            </div>
+            <h3 style="text-align:center;font-weight:bold;background:#e0e0e0;padding:8px;border:1px solid #333;margin-bottom:0;color:#004a99">MATERIALES</h3>
+            <table style="width:100%;border-collapse:collapse;margin-top:5px">
+                <thead><tr style="background:#f2f2f2">
+                    <th style="width:5%;border:1px solid #333;padding:5px">ITEM</th>
+                    <th style="width:9%;border:1px solid #333;padding:5px">CANTIDAD</th>
+                    <th style="width:9%;border:1px solid #333;padding:5px">UNIDAD</th>
+                    <th style="width:37%;border:1px solid #333;padding:5px">DETALLE</th>
+                    <th style="width:25%;border:1px solid #333;padding:5px">OBS. (RUBRO)</th>
+                    <th style="width:15%;border:1px solid #333;padding:5px"># RUBRO</th>
+                </tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            ${notaHtml}
+            <div style="margin-top:20px;text-align:right"><strong>Fecha:</strong> ${s.fecha || ''}</div>
+            <div style="display:flex;justify-content:space-around;text-align:center;margin-top:40px">
+                <div style="width:22%"><div style="border-top:1px solid #333;margin-bottom:5px"></div><strong>ING. DANIEL LOAIZA L.</strong><br>ADMINISTRADOR</div>
+                <div style="width:22%"><div style="border-top:1px solid #333;margin-bottom:5px"></div><strong>ING. JOSE MACAS P.</strong><br>RESIDENTE DE OBRA</div>
+                <div style="width:22%"><div style="border-top:1px solid #333;margin-bottom:5px"></div><strong>ING. MIGUEL REYES N.</strong><br>SUPERINTENDENTE</div>
+                <div style="width:22%"><div style="border-top:1px solid #333;margin-bottom:5px"></div><strong>TCNLG. MARIA LOZANO</strong><br>BODEGA</div>
+            </div>
+            ${subHtml}
+        </div>`;
+    });
+
+    const pw = window.open('','','height=700,width=900');
+    pw.document.write(`<html><head><title>Historial de Solicitudes</title>
+    <style>
+        body{font-family:Arial,sans-serif;margin:20px}
+        table{width:100%;border-collapse:collapse;margin-top:5px;table-layout:fixed}
+        th,td{border:1px solid #333;padding:6px;vertical-align:top;font-size:10pt}
+        th{background:#f2f2f2;font-weight:bold;text-align:center}
+        img{max-width:100%;height:auto}
+    </style></head><body>
+    <h1 style="text-align:center;color:#004a99">Historial de Solicitudes</h1><hr>
+    ${contentHtml}</body></html>`);
+    pw.document.close();
+    pw.onload = () => pw.print();
+}
+
+/* =============================================
+   EVENTOS
+============================================= */
+
+// Tabla: auto-resize y validación numérica
+tablaCuerpo.addEventListener('input', e => {
+    if (e.target.tagName.toLowerCase() === 'textarea') ajustarAlturaTextarea(e.target);
+});
+
+tablaCuerpo.addEventListener('blur', e => {
+    if (e.target.tagName.toLowerCase() === 'textarea' && e.target.parentElement.cellIndex === 1) {
+        const v = parseFloat(e.target.value.trim().replace(',','.'));
+        if (!isNaN(v)) e.target.value = v % 1 === 0 ? v.toString() : v.toFixed(2);
+    }
+}, true);
+
+tablaCuerpo.addEventListener('click', e => {
+    if (e.target.classList.contains('btn-eliminar-fila')) {
+        e.target.closest('tr').remove();
+        renumerarItems();
+    }
+});
+
+// Botones formulario
+document.getElementById('btn-agregar').addEventListener('click', () => agregarFila());
+document.getElementById('btn-guardar').addEventListener('click', guardarSolicitud);
+document.getElementById('btn-limpiar').addEventListener('click', limpiarFormulario);
+document.getElementById('btn-imprimir').addEventListener('click', () => {
+    const blk = document.getElementById('subcontratista-signature');
+    if (blk.style.display !== 'none') blk.classList.add('print-visible');
+    window.print();
+    blk.classList.remove('print-visible');
+});
+
+// Botones historial
+document.getElementById('btn-buscar').addEventListener('click', aplicarFiltros);
+document.getElementById('btn-limpiar-filtros').addEventListener('click', limpiarFiltros);
+document.getElementById('btn-imprimir-historial').addEventListener('click', imprimirHistorial);
+document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
+
+// Filtros con Enter
+['filtro-material','filtro-numero','filtro-rubro'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') aplicarFiltros(); });
+});
+
+// Delegación en lista: Ver / Editar / Eliminar
+listaSolicitudesUI.addEventListener('click', e => {
+    const id = e.target.getAttribute('data-id');
+    if (!id) return;
+    if (e.target.classList.contains('btn-ver'))      toggleDetalle(id);
+    if (e.target.classList.contains('btn-cargar'))   cargarSolicitud(id);
+    if (e.target.classList.contains('btn-eliminar')) eliminarSolicitud(id);
+});
+
+/* =============================================
+   INICIALIZACIÓN
+============================================= */
+window.addEventListener('DOMContentLoaded', () => {
+    limpiarFormulario();
+    mostrarSolicitudesGuardadas();
+    openTab('solicitud');
+});
+</script>
 </body>
 </html>
