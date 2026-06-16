@@ -222,36 +222,12 @@
         #resumen-material strong { font-size: 15px; color: #155724; }
 
         /* =============================================
-           PESTAÑA CONSULTA IA
-        ============================================= */
-        #consulta-ia { }
-        #consulta-ia h2 { text-align: center; color: var(--azul); margin-top: 0; }
-        #consulta-ia p  { font-size: 13px; color: #555; }
-
-        .ia-input-row { display: flex; gap: 0; }
-        #consulta-input {
-            flex: 1; padding: 10px 14px; border: 1px solid var(--azul);
-            border-radius: 4px 0 0 4px; font-size: 15px; font-family: inherit; outline: none;
-        }
-        #btn-consultar { background: var(--azul); padding: 10px 18px; font-size: 14px; border-radius: 0 4px 4px 0; }
-
-        /* Historial de consultas IA */
-        #historial-ia {
-            margin-top: 14px; max-height: 500px; overflow-y: auto;
-            display: flex; flex-direction: column-reverse; gap: 10px;
-        }
-        .ia-burbuja { border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; }
-        .ia-burbuja.pregunta { background: #eef3fb; border-left: 3px solid var(--azul); }
-        .ia-burbuja.respuesta { background: #f1f8f1; border-left: 3px solid var(--verde); }
-        .ia-burbuja .ia-label { font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; color: #888; }
-
-        /* =============================================
            IMPRESIÓN
         ============================================= */
         @media print {
             body { margin: 20px; background: #fff; }
             .app-container, .tab-content { border: none; box-shadow: none; padding: 0; }
-            .tabs, .actions, .history-actions, #historial, #busqueda, #consulta-ia,
+            .tabs, .actions, .history-actions, #historial, #busqueda,
             .btn-eliminar-fila, .search-panel, #search-summary { display: none !important; }
             th:last-child, td:last-child { display: none; }
             td textarea, #no_solicitud, #fecha-input, #nota-input {
@@ -271,7 +247,6 @@
         <button class="tab-button active" onclick="openTab('solicitud')">📋 Nueva Solicitud</button>
         <button class="tab-button" onclick="openTab('historial')">📁 Historial</button>
         <button class="tab-button" onclick="openTab('busqueda')">🔍 Buscar Material</button>
-        <button class="tab-button" onclick="openTab('consulta-ia')">🤖 Consulta IA</button>
     </div>
 
     <!-- ═══════════════════════════════════════════════
@@ -421,26 +396,8 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════
-         PESTAÑA 4 — CONSULTA IA
+         PESTAÑA 4 — CONSULTA IA (eliminada)
     ═══════════════════════════════════════════════ -->
-    <div id="consulta-ia" class="tab-content">
-        <h2>Consulta Rápida de Materiales 🤖</h2>
-        <p>Escribe tu consulta en lenguaje natural.<br>
-           Ejemplos: <em>"cantidad total de cemento"</em> · <em>"solicitudes con rubro 10.05"</em> · <em>"solicitud 007"</em> · <em>"materiales de junio"</em> · <em>"solicitudes con firma"</em></p>
-
-        <div class="ia-input-row">
-            <input type="text" id="consulta-input" placeholder="Escribe tu pregunta..."
-                   onkeydown="if(event.key==='Enter') ejecutarConsultaIA()">
-            <button id="btn-consultar" onclick="ejecutarConsultaIA()">Consultar</button>
-        </div>
-
-        <div id="historial-ia">
-            <div class="ia-burbuja respuesta">
-                <div class="ia-label">IA</div>
-                ¡Hola! Estoy lista para responder consultas sobre tus solicitudes guardadas.
-            </div>
-        </div>
-    </div>
 
 </div><!-- /app-container -->
 
@@ -479,8 +436,6 @@ const listaSolicitudesUI  = document.getElementById('lista-solicitudes');
 const editingSolicitudId  = document.getElementById('editing-solicitud-id');
 const btnGuardar          = document.getElementById('btn-guardar');
 const notaInput           = document.getElementById('nota-input');
-const consultaInput       = document.getElementById('consulta-input');
-const historialIA         = document.getElementById('historial-ia');
 
 /* =============================================
    PESTAÑAS
@@ -988,186 +943,6 @@ function exportarCSV() {
     a.download = `solicitudes_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-}
-
-/* =============================================
-   CONSULTA IA — CON HISTORIAL DE CONVERSACIÓN
-============================================= */
-function ejecutarConsultaIA() {
-    const query = consultaInput.value.trim();
-    if (!query) return;
-
-    // Agregar burbuja de pregunta
-    agregarBurbujaIA('pregunta', query);
-    consultaInput.value = '';
-
-    let respuesta;
-    const q = query.toLowerCase();
-
-    if (solicitudesCargadas.length === 0) {
-        respuesta = 'Aún no hay solicitudes guardadas para analizar.';
-    } else if (q.includes('total') || q.includes('cantidad')) {
-        respuesta = analizarCantidadTotal(q);
-    } else if (q.includes('rubro') || q.includes('código')) {
-        respuesta = analizarPorRubro(q);
-    } else if ((q.includes('solicitud') || q.includes('número')) && q.match(/\d+/)) {
-        respuesta = analizarPorNumero(q);
-    } else if (q.includes('mes') || q.includes('fecha')) {
-        respuesta = analizarPorTiempo(q);
-    } else if (q.includes('firma') || q.includes('subcontratista') || q.includes('aprobada')) {
-        respuesta = analizarPorFirma();
-    } else if (q.includes('cuántas') || q.includes('cuantas') || q.includes('solicitudes')) {
-        const n = solicitudesCargadas.length;
-        const totalLineas = solicitudesCargadas.reduce((s, x) => s + (x.items||[]).length, 0);
-        respuesta = `Hay <strong>${n}</strong> solicitud(es) guardada(s) con un total de <strong>${totalLineas}</strong> líneas de material.`;
-    } else {
-        respuesta = analizarPorTexto(q);
-        if (!respuesta) {
-            respuesta = `No entiendo la consulta. Prueba con:<br>
-            · <em>"cantidad total de [material]"</em><br>
-            · <em>"rubro [código]"</em><br>
-            · <em>"solicitud [número]"</em><br>
-            · <em>"materiales de [mes]"</em><br>
-            · <em>"solicitudes con firma"</em>`;
-        }
-    }
-
-    agregarBurbujaIA('respuesta', respuesta);
-}
-
-function agregarBurbujaIA(tipo, texto) {
-    const div = document.createElement('div');
-    div.className = `ia-burbuja ${tipo}`;
-    div.innerHTML = `<div class="ia-label">${tipo === 'pregunta' ? 'Tú' : 'IA'}</div>${texto}`;
-    // Insertar al principio (column-reverse lo muestra abajo)
-    historialIA.insertBefore(div, historialIA.firstChild);
-}
-
-/* ─── FUNCIONES DE ANÁLISIS IA ─── */
-
-function analizarCantidadTotal(q) {
-    const stopWords = ['total','cantidad','de','el','la','un','una','es','se','cuanto','pedir','hay','dame'];
-    const palabras  = q.split(' ').filter(p => p.length > 2 && !stopWords.includes(p));
-    if (!palabras.length) return 'Especifica el material. Ej: <em>"cantidad total de cemento"</em>.';
-
-    const termino = palabras[0];
-    const unidadesMap = {};
-    const solicitudesConMaterial = [];
-
-    solicitudesCargadas.forEach(s => {
-        const itemsMatch = (s.items || []).filter(item =>
-            obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino)
-        );
-        if (itemsMatch.length) {
-            solicitudesConMaterial.push(s.numero || 'N/A');
-            itemsMatch.forEach(item => {
-                const cant = parseFloat(String(obtenerValorSeguro(item,'cantidad')).replace(',','.'));
-                const uni  = obtenerValorSeguro(item,'unidad') || 'u';
-                if (!isNaN(cant)) unidadesMap[uni] = (unidadesMap[uni] || 0) + cant;
-            });
-        }
-    });
-
-    if (!Object.keys(unidadesMap).length) {
-        return `No se encontró el material <strong>"${termino}"</strong> en ninguna solicitud.`;
-    }
-    const totalStr = Object.entries(unidadesMap).map(([u,v]) => `${v.toFixed(2)} ${u}`).join(', ');
-    return `<strong>"${termino.toUpperCase()}"</strong> — Total: <strong>${totalStr}</strong><br>
-            Presente en solicitudes: ${solicitudesConMaterial.join(', ')}`;
-}
-
-function analizarPorRubro(q) {
-    const match = q.match(/rubro\s*([\d.]+)/) || q.match(/código\s*([\d.]+)/);
-    if (!match) return 'Especifica el código. Ej: <em>"rubro 10.05"</em>.';
-
-    const rubroBuscado = match[1].trim();
-    const encontradas  = [];
-
-    solicitudesCargadas.forEach(s => {
-        const items = (s.items || []).filter(i => obtenerValorSeguro(i,'rubro').includes(rubroBuscado));
-        if (items.length) {
-            encontradas.push({
-                numero: s.numero,
-                fecha:  s.fecha,
-                items:  items.map(i => `${obtenerValorSeguro(i,'cantidad')} ${obtenerValorSeguro(i,'unidad')} de ${obtenerValorSeguro(i,'detalle')}`)
-            });
-        }
-    });
-
-    if (!encontradas.length) return `No hay materiales bajo el Rubro <strong>${rubroBuscado}</strong>.`;
-    let r = `Rubro <strong>${rubroBuscado}</strong> encontrado en <strong>${encontradas.length}</strong> solicitud(es):<br>`;
-    encontradas.forEach(s => {
-        r += `<br><strong>N° ${s.numero}</strong> (${s.fecha}):<br>· ${s.items.join('<br>· ')}`;
-    });
-    return r;
-}
-
-function analizarPorNumero(q) {
-    const match = q.match(/(\d+)/);
-    if (!match) return 'Especifica el número. Ej: <em>"solicitud 007"</em>.';
-
-    const num = match[0];
-    const s   = solicitudesCargadas.find(x => (x.numero || '').includes(num));
-    if (!s) return `No se encontró la solicitud N° <strong>${num}</strong>.`;
-
-    let r = `<strong>Solicitud N° ${s.numero}</strong> — ${s.fecha}<br>`;
-    r += `· Firma subcontratista: <strong>${s.firmaSubcontratista ? 'SÍ' : 'NO'}</strong><br>`;
-    if (s.nota) r += `· Nota: ${s.nota}<br>`;
-    r += `· Materiales (<strong>${(s.items||[]).length}</strong> líneas):<br>`;
-    (s.items || []).forEach(item => {
-        r += `&nbsp;&nbsp;${obtenerValorSeguro(item,'cantidad')} ${obtenerValorSeguro(item,'unidad')} — ${obtenerValorSeguro(item,'detalle')} (Rubro: ${obtenerValorSeguro(item,'rubro')})<br>`;
-    });
-    return r;
-}
-
-function analizarPorTiempo(q) {
-    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    const mes   = meses.find(m => q.includes(m));
-    if (!mes) return 'Especifica un mes. Ej: <em>"materiales de junio"</em>.';
-
-    const lista = solicitudesCargadas.filter(s => (s.fecha||'').toLowerCase().includes(mes));
-    if (!lista.length) return `No hay solicitudes en <strong>${mes}</strong>.`;
-
-    const totalLineas = lista.reduce((s, x) => s + (x.items||[]).length, 0);
-    return `En <strong>${mes.toUpperCase()}</strong>: <strong>${lista.length}</strong> solicitud(es) con <strong>${totalLineas}</strong> líneas de material.<br>
-            N° de solicitudes: ${lista.map(s => s.numero || 'N/A').join(', ')}`;
-}
-
-function analizarPorFirma() {
-    const con = solicitudesCargadas.filter(s => s.firmaSubcontratista);
-    const sin = solicitudesCargadas.filter(s => !s.firmaSubcontratista);
-    return `<strong>Estado de firma — SR. JAIME ORTEGA GONZALEZ</strong><br>
-            · Con firma: <strong>${con.length}</strong> solicitud(es) ${con.length ? `(${con.map(s=>s.numero||'N/A').join(', ')})` : ''}<br>
-            · Sin firma: <strong>${sin.length}</strong> solicitud(es)`;
-}
-
-function analizarPorTexto(q) {
-    const stop = ['la','para','el','de','qué','en','hay','nota','área','zona','buscar','que','con','una','uno'];
-    const terminos = q.split(' ').filter(p => p.length > 2 && !stop.includes(p));
-    if (!terminos.length) return null;
-
-    const termino = terminos[0];
-    const encontradas = [];
-
-    solicitudesCargadas.forEach(s => {
-        const items = (s.items || []).filter(item =>
-            obtenerValorSeguro(item,'obs').toLowerCase().includes(termino) ||
-            obtenerValorSeguro(item,'detalle').toLowerCase().includes(termino)
-        );
-        const enNota = s.nota && s.nota.toLowerCase().includes(termino);
-        if (items.length || enNota) {
-            encontradas.push({ numero: s.numero, fecha: s.fecha, items, enNota, nota: s.nota });
-        }
-    });
-
-    if (!encontradas.length) return `No hay coincidencias para <strong>"${termino}"</strong>.`;
-    let r = `Coincidencias para <strong>"${termino}"</strong> en <strong>${encontradas.length}</strong> solicitud(es):<br>`;
-    encontradas.forEach(s => {
-        r += `<br><strong>N° ${s.numero}</strong> (${s.fecha}):`;
-        if (s.enNota) r += ` nota general coincide.`;
-        if (s.items.length) r += ` ${s.items.length} material(es) coincide(n).`;
-    });
-    return r;
 }
 
 /* =============================================
