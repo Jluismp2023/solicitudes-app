@@ -134,7 +134,7 @@
             grid-template-columns: auto 1fr auto;
             align-items: stretch;
             border: 1.5px solid var(--azul);
-            border-radius: 4px;
+            border-radius: 4px 4px 0 0;
             margin-bottom: 0;
             overflow: hidden;
         }
@@ -201,7 +201,9 @@
             background: var(--gris-bg);
             border: 1.5px solid var(--azul);
             border-top: none;
+            border-radius: 0 0 4px 4px;
             margin-bottom: 18px;
+            overflow: hidden;
         }
         .meta-item {
             padding: 8px 14px;
@@ -307,7 +309,7 @@
         .btn-imprimir-uno      { background: var(--gris); margin: 3px; }
 
         /* =============================================
-           NOTA
+           NOTA / JUSTIFICACIÓN
         ============================================= */
         .note-section { margin: 16px 0; }
         .note-section label {
@@ -317,8 +319,8 @@
         }
         .note-section textarea {
             width: 100%; border: 1px solid var(--borde); border-radius: 4px;
-            padding: 10px; font-family: var(--font-body); font-size: 13px; resize: vertical;
-            min-height: 50px;
+            padding: 12px; font-family: var(--font-body); font-size: 13px; resize: vertical;
+            min-height: 130px; line-height: 1.5;
         }
         .note-section textarea:focus { border-color: var(--azul); outline: none; }
 
@@ -342,7 +344,7 @@
         .signatures-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 55px 60px;
+            gap: 90px 60px;
             margin: 50px 30px 30px;
         }
         .signature-cell { text-align: center; }
@@ -350,7 +352,7 @@
             font-family: var(--font-head);
             font-size: 10.5px; font-weight: 700;
             color: var(--azul); letter-spacing: 0.22em;
-            text-transform: uppercase; margin-bottom: 55px;
+            text-transform: uppercase; margin-bottom: 95px;
             padding-bottom: 4px; border-bottom: 2px solid var(--azul);
             display: inline-block;
         }
@@ -359,34 +361,22 @@
         .signature-position { font-size: 11px; color: #555; font-style: italic; }
 
         @media (max-width: 700px) {
-            .signatures-grid { gap: 45px 25px; margin: 40px 10px 25px; }
+            .signatures-grid { gap: 75px 25px; margin: 40px 10px 25px; }
+            .signature-role { margin-bottom: 80px; }
         }
 
         /* Subcontratista (opcional) */
         .signature-subcontratista {
             display: none;
-            margin: 40px 30px 20px;
-            padding: 20px 25px;
+            margin: 50px 30px 25px;
+            padding: 25px 30px;
             border: 1.5px dashed #888;
             border-radius: 6px;
             background: var(--gris-bg);
         }
         .signature-subcontratista.visible { display: block; }
         .sub-cell { text-align: center; max-width: 380px; margin: 0 auto; }
-        .sub-line { border-top: 1px solid #333; margin: 55px auto 6px; width: 320px; }
-        .signature-sub-fields {
-            margin-top: 14px;
-            display: flex; justify-content: center; gap: 28px;
-            font-size: 11.5px; flex-wrap: wrap;
-        }
-        .signature-sub-fields .sub-field { display: flex; align-items: center; gap: 6px; }
-        .signature-sub-fields .sub-field label { font-weight: 600; color: #555; }
-        .signature-sub-fields input {
-            border: none; border-bottom: 1px dotted #333;
-            font-family: var(--font-body); font-size: 11.5px;
-            width: 130px; outline: none; text-align: center;
-            background: transparent;
-        }
+        .sub-line { border-top: 1px solid #333; margin: 95px auto 6px; width: 320px; }
 
         /* =============================================
            PIE DE PÁGINA DEL DOCUMENTO
@@ -677,7 +667,7 @@
 
         <div class="note-section">
             <label for="nota-input">Justificación / Nota</label>
-            <textarea id="nota-input" rows="3" placeholder="Justifique el pedido — actividad, rubro contractual, frente de trabajo..."></textarea>
+            <textarea id="nota-input" rows="6" placeholder="Justifique el pedido — actividad, rubro contractual, frente de trabajo. Puede escribir varias líneas según necesite..."></textarea>
         </div>
 
         <div class="date-section">
@@ -719,16 +709,6 @@
                 <div class="sub-line"></div>
                 <div class="signature-name">SR. JAIME ORTEGA GONZALEZ</div>
                 <div class="signature-position">Subcontratista</div>
-                <div class="signature-sub-fields">
-                    <div class="sub-field">
-                        <label>C.I.:</label>
-                        <input type="text" id="ci-subcontratista" placeholder="0000000000">
-                    </div>
-                    <div class="sub-field">
-                        <label>Fecha de recibido:</label>
-                        <input type="text" id="fecha-recibido" placeholder="DD/MM/AAAA">
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -878,8 +858,6 @@ const totalLineasEl       = document.getElementById('total-lineas');
 const metaProyecto        = document.getElementById('meta-proyecto');
 const metaBodega          = document.getElementById('meta-bodega');
 const metaTipo            = document.getElementById('meta-tipo');
-const ciSubInput          = document.getElementById('ci-subcontratista');
-const fechaRecibidoInput  = document.getElementById('fecha-recibido');
 const footerContract      = document.getElementById('footer-contract');
 
 /* =============================================
@@ -1127,10 +1105,8 @@ function limpiarFormulario() {
     if (metaProyecto) metaProyecto.selectedIndex = 0;
     if (metaBodega)   metaBodega.selectedIndex = 0;
     if (metaTipo)     metaTipo.selectedIndex   = 0;
-    // Ocultar subcontratista y limpiar sus campos
+    // Ocultar subcontratista
     document.getElementById('subcontratista-signature').classList.remove('visible');
-    if (ciSubInput) ciSubInput.value = '';
-    if (fechaRecibidoInput) fechaRecibidoInput.value = '';
     for (let i = 0; i < 5; i++) agregarFila();
     actualizarTotalLineas();
 }
@@ -1241,13 +1217,10 @@ async function guardarSolicitud() {
         items,
         nota:                 notaInput.value,
         firmaSubcontratista:  agregarSubcontratista,
-        // Nuevos metadatos
+        // Metadatos del documento
         proyecto:             metaProyecto ? metaProyecto.value : '',
         bodega:               metaBodega   ? metaBodega.value   : '',
-        tipoSolicitud:        metaTipo     ? metaTipo.value     : '',
-        // Subcontratista (si aplica)
-        cedulaSubcontratista: agregarSubcontratista ? (ciSubInput?.value || '') : '',
-        fechaRecibido:        agregarSubcontratista ? (fechaRecibidoInput?.value || '') : ''
+        tipoSolicitud:        metaTipo     ? metaTipo.value     : ''
     };
 
     const id = editingSolicitudId.value;
@@ -1521,12 +1494,8 @@ function cargarSolicitud(id) {
     const subEl = document.getElementById('subcontratista-signature');
     if (s.firmaSubcontratista) {
         subEl.classList.add('visible');
-        if (ciSubInput)         ciSubInput.value         = s.cedulaSubcontratista || '';
-        if (fechaRecibidoInput) fechaRecibidoInput.value = s.fechaRecibido || '';
     } else {
         subEl.classList.remove('visible');
-        if (ciSubInput)         ciSubInput.value = '';
-        if (fechaRecibidoInput) fechaRecibidoInput.value = '';
     }
 
     tablaCuerpo.innerHTML = '';
@@ -1837,10 +1806,6 @@ function construirHtmlImpresionSolicitud(s) {
             <div class="sub-line"></div>
             <div class="sub-name">SR. JAIME ORTEGA GONZALEZ</div>
             <div class="sub-position">Subcontratista</div>
-            <div class="sub-fields">
-                <div><strong>C.I.:</strong> ${s.cedulaSubcontratista || '_________________'}</div>
-                <div><strong>Fecha de recibido:</strong> ${s.fechaRecibido || '_________________'}</div>
-            </div>
         </div>` : '';
 
     return `<div class="doc-page">
@@ -1939,25 +1904,31 @@ function abrirVentanaImpresion(titulo, contenidoHtml) {
         /* Cabecera */
         .header-pro {
             display: grid; grid-template-columns: auto 1fr auto;
-            border: 1.5px solid #004a99; border-radius: 3px;
+            border: 1.5px solid #004a99;
+            border-radius: 3px 3px 0 0;
             overflow: hidden; margin-bottom: 0;
         }
         .hz-logo { padding: 10px 14px; border-right: 1px solid #004a99; display: flex; align-items: center; }
         .hz-logo img { width: 130px; height: auto; }
-        .hz-title { padding: 12px 16px; text-align: center; border-right: 1px solid #004a99; background: #f0f5fc; }
+        .hz-title { padding: 12px 16px; text-align: center; border-right: 1px solid #004a99; background: #f0f5fc;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .doc-type { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; color: #004a99; letter-spacing: 0.05em; text-transform: uppercase; }
         .org      { font-size: 9px; color: #555; letter-spacing: 0.22em; text-transform: uppercase; margin-top: 5px; font-weight: 600; }
         .hz-id    { min-width: 180px; }
         .hz-id table { width: 100%; border-collapse: collapse; font-size: 10px; }
         .hz-id td { padding: 4px 8px; border-bottom: 1px solid #e8eef5; text-align: left; }
-        .hz-id td:first-child { color: #666; background: #f7f9fc; width: 50%; }
+        .hz-id td:first-child { color: #666; background: #f7f9fc; width: 50%;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .hz-id tr:last-child td { border-bottom: none; }
 
         /* Metadatos */
         .meta-block {
             display: grid; grid-template-columns: 2fr 1fr 1fr;
             border: 1.5px solid #004a99; border-top: none;
-            background: #f7f9fc; margin-bottom: 14px;
+            border-radius: 0 0 3px 3px;
+            background: #f7f9fc; margin-bottom: 16px;
+            overflow: hidden;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
         .meta-cell { padding: 7px 12px; border-right: 1px solid #d0d8e2; font-size: 10.5px; }
         .meta-cell:last-child { border-right: none; }
@@ -1988,10 +1959,10 @@ function abrirVentanaImpresion(titulo, contenidoHtml) {
 
         .fecha-line { text-align: right; font-size: 11px; margin-top: 12px; font-style: italic; color: #555; }
 
-        /* Firmas 2x2 */
+        /* Firmas 2x2 — espaciado amplio para firma manuscrita (~3cm) */
         .sig-grid {
             display: grid; grid-template-columns: 1fr 1fr;
-            gap: 45px 60px; margin: 50px 30px 20px;
+            gap: 75px 60px; margin: 45px 25px 20px;
             page-break-inside: avoid;
         }
         .sig-cell { text-align: center; }
@@ -2000,19 +1971,20 @@ function abrirVentanaImpresion(titulo, contenidoHtml) {
             font-family: 'Manrope', sans-serif;
             font-size: 9.5px; font-weight: 700; color: #004a99;
             letter-spacing: 0.22em; text-transform: uppercase;
-            margin-bottom: 50px; padding-bottom: 3px;
+            margin-bottom: 80px; padding-bottom: 3px;
             border-bottom: 2px solid #004a99;
         }
         .sig-line { border-top: 1px solid #333; margin-bottom: 5px; }
         .sig-name { font-weight: 700; font-size: 11px; letter-spacing: 0.02em; }
         .sig-position { font-size: 10px; color: #555; font-style: italic; }
 
-        /* Subcontratista */
+        /* Subcontratista — también con espacio amplio */
         .sub-block {
-            margin: 30px 30px 15px; padding: 16px 22px;
+            margin: 35px 25px 15px; padding: 22px 28px;
             border: 1.5px dashed #888; border-radius: 6px;
             background: #fafbfc; text-align: center;
             page-break-inside: avoid;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
         .sub-role {
             display: inline-block;
@@ -2020,12 +1992,11 @@ function abrirVentanaImpresion(titulo, contenidoHtml) {
             font-size: 9.5px; font-weight: 700; color: #004a99;
             letter-spacing: 0.22em; text-transform: uppercase;
             padding-bottom: 3px; border-bottom: 2px solid #004a99;
-            margin-bottom: 50px;
+            margin-bottom: 85px;
         }
         .sub-line { border-top: 1px solid #333; width: 320px; margin: 0 auto 5px; }
         .sub-name { font-weight: 700; font-size: 11px; }
         .sub-position { font-size: 10px; color: #555; font-style: italic; }
-        .sub-fields { margin-top: 12px; display: flex; justify-content: center; gap: 28px; font-size: 10.5px; flex-wrap: wrap; }
 
         /* Pie */
         .doc-footer {
@@ -2131,9 +2102,7 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
         firmaSubcontratista:   subEl.classList.contains('visible'),
         proyecto:              metaProyecto?.value || '',
         bodega:                metaBodega?.value   || '',
-        tipoSolicitud:         metaTipo?.value     || '',
-        cedulaSubcontratista:  ciSubInput?.value   || '',
-        fechaRecibido:         fechaRecibidoInput?.value || ''
+        tipoSolicitud:         metaTipo?.value     || ''
     };
     playSound('print');
     abrirVentanaImpresion(`Solicitud N° ${s.numero}`, construirHtmlImpresionSolicitud(s));
